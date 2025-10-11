@@ -1,50 +1,95 @@
+// Login page interactive features
 document.addEventListener("DOMContentLoaded", function () {
-  const form = document.querySelector("form");
-  const emailInput = document.querySelector('input[name="email"]');
-  const passwordInput = document.querySelector('input[name="password"]');
+  // Toggle password visibility
+  const togglePassword = document.getElementById("togglePassword");
+  const passwordInput = document.getElementById("password");
+  const eyeIcon = document.getElementById("eyeIcon");
 
-  // Kiểm tra định dạng email
-  emailInput.addEventListener("blur", function () {
-    const email = emailInput.value;
-    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+  if (togglePassword && passwordInput && eyeIcon) {
+    togglePassword.addEventListener("click", function () {
+      const type =
+        passwordInput.getAttribute("type") === "password" ? "text" : "password";
+      passwordInput.setAttribute("type", type);
 
-    if (!emailRegex.test(email)) {
-      emailInput.setCustomValidity("Email không hợp lệ");
-    } else {
-      emailInput.setCustomValidity("");
-    }
-  });
-
-  // Hiển thị/ẩn thông báo lỗi sau 5 giây
-  const messages = document.querySelectorAll(
-    ".success-msg, .error-msg, .info-msg"
-  );
-  if (messages.length > 0) {
-    setTimeout(function () {
-      messages.forEach(function (message) {
-        message.style.opacity = "0";
-        setTimeout(function () {
-          message.style.display = "none";
-        }, 1000);
-      });
-    }, 5000);
+      // Toggle eye icon
+      if (type === "text") {
+        eyeIcon.classList.remove("fa-eye");
+        eyeIcon.classList.add("fa-eye-slash");
+      } else {
+        eyeIcon.classList.remove("fa-eye-slash");
+        eyeIcon.classList.add("fa-eye");
+      }
+    });
   }
 
-  // Lưu email trong local storage nếu chọn "Ghi nhớ đăng nhập"
-  const rememberCheckbox = document.querySelector("#remember");
+  // Auto-dismiss alerts after 8 seconds
+  const alerts = document.querySelectorAll(".alert");
+  alerts.forEach((alert) => {
+    setTimeout(() => {
+      if (alert && alert.querySelector(".btn-close")) {
+        const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+        bsAlert.close();
+      }
+    }, 8000);
+  });
 
-  // Lấy email đã lưu (nếu có)
+  // Remember me functionality
+  const rememberCheckbox = document.getElementById("remember");
+  const emailInput = document.getElementById("email");
+
+  // Load saved email if exists
   const savedEmail = localStorage.getItem("savedEmail");
-  if (savedEmail) {
+  if (savedEmail && emailInput) {
     emailInput.value = savedEmail;
-    rememberCheckbox.checked = true;
+    if (rememberCheckbox) {
+      rememberCheckbox.checked = true;
+    }
   }
 
-  form.addEventListener("submit", function () {
-    if (rememberCheckbox.checked) {
-      localStorage.setItem("savedEmail", emailInput.value);
-    } else {
-      localStorage.removeItem("savedEmail");
+  // Form submission handler
+  const loginForm = document.querySelector(".auth-form");
+  if (loginForm) {
+    loginForm.addEventListener("submit", function (e) {
+      // Save email if remember me is checked
+      if (rememberCheckbox && rememberCheckbox.checked && emailInput) {
+        localStorage.setItem("savedEmail", emailInput.value);
+      } else {
+        localStorage.removeItem("savedEmail");
+      }
+
+      // Show loading state (but DON'T disable button as it may prevent form submission)
+      const submitBtn = this.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        // Change button text to show loading
+        submitBtn.innerHTML =
+          '<i class="fas fa-spinner fa-spin me-2"></i>Đang đăng nhập...';
+        // Don't disable - let the form submit naturally
+      }
+
+      // Form will submit automatically, no need to prevent or handle manually
+    });
+  }
+
+  // Email validation
+  if (emailInput) {
+    emailInput.addEventListener("blur", function () {
+      const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+      if (this.value && !emailRegex.test(this.value)) {
+        this.classList.add("is-invalid");
+      } else {
+        this.classList.remove("is-invalid");
+      }
+    });
+  }
+
+  // Focus first empty input
+  setTimeout(() => {
+    if (emailInput && !emailInput.value) {
+      emailInput.focus();
+    } else if (passwordInput && !passwordInput.value) {
+      passwordInput.focus();
     }
-  });
+  }, 300);
+
+  console.log("Login page loaded successfully!");
 });

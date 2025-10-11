@@ -1,6 +1,19 @@
 <?php
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// Start output buffering to prevent header issues
+ob_start();
+
 require_once '../../model/user_model.php';
 session_start();
+
+// Debug: Log all POST data
+if (!empty($_POST)) {
+    error_log("POST data received: " . print_r($_POST, true));
+    error_log("Session ID at controller start: " . session_id());
+}
 
 // Xử lý đăng ký
 if (isset($_POST['register'])) {
@@ -11,10 +24,9 @@ if (isset($_POST['register'])) {
     $phone = htmlspecialchars(trim($_POST['phone']));
     $address = htmlspecialchars(trim($_POST['address']));
     
-    // Kiểm tra mật khẩu mạnh
-    $password_regex = '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/';
-    if (!preg_match($password_regex, $password)) {
-        header('Location: ../../view/User/register.php?msg=password');
+    // Kiểm tra độ dài mật khẩu (tối thiểu 6 ký tự)
+    if (strlen($password) < 6) {
+        header('Location: ../../view/User/register.php?msg=password_short');
         exit();
     }
     
@@ -39,17 +51,18 @@ if (isset($_POST['register'])) {
     // Tiến hành đăng ký
     $register_result = registerUser($fullname, $email, $password, $phone, $address);
     if ($register_result === true) {
-        // Gửi email xác nhận
-        require_once '../../model/email_model.php';
-        $verification_code = md5(time() . $email);
-        saveVerificationCode($email, $verification_code);
-        $verification_link = "http://" . $_SERVER['HTTP_HOST'] . "/Web_TMDT/controller/controller_User/email_controller.php?action=verify&code=" . $verification_code;
-        sendVerificationEmail($email, $fullname, $verification_link);
-        
-        header('Location: ../../view/User/login.php?msg=verify');
+        // Đăng ký thành công, chuyển về trang đăng nhập
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        header('Location: ../../view/User/login.php?msg=success');
         exit();
     } else {
-        header('Location: ../../view/User/register.php?msg=' . $register_result);
+        // Đăng ký thất bại (email đã tồn tại)
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        header('Location: ../../view/User/register.php?msg=exists');
         exit();
     }
 }
@@ -59,7 +72,13 @@ if (isset($_POST['login'])) {
     $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
     $password = $_POST['password'];
     
+    // Debug: Log login attempt
+    error_log("Login attempt for: " . $email);
+    
     $login_result = validateLogin($email, $password);
+    
+    // Debug: Log result
+    error_log("Login result: " . print_r($login_result, true));
     
     if (is_array($login_result)) {
         // Đăng nhập thành công, thiết lập session
@@ -67,6 +86,9 @@ if (isset($_POST['login'])) {
         $_SESSION['fullname'] = $login_result['fullname'];
         $_SESSION['role'] = $login_result['role'];
         $_SESSION['last_activity'] = time(); // Thêm để kiểm tra timeout phiên
+        
+        // Debug logging
+        error_log("Session set successfully - user_id: " . $_SESSION['user_id'] . ", role: " . $_SESSION['role']);
         
         // Lưu cookie nếu người dùng chọn "Ghi nhớ đăng nhập"
         if (isset($_POST['remember']) && $_POST['remember'] == 'on') {
@@ -82,23 +104,34 @@ if (isset($_POST['login'])) {
             saveLoginHistory($login_result['user_id'], $_SERVER['REMOTE_ADDR']);
         }
         
-        // Chuyển hướng theo quyền
+        // Chuyển hướng dựa trên vai trò
         if ($login_result['role'] == 'admin') {
-            header('Location: ../../view/Admin/admin_home.php');
+            $redirect_url = '../../view/Admin/admin_home.php';
         } else {
-            header('Location: ../../view/User/home.php');
+            $redirect_url = '../../view/User/home.php';
         }
+        
+        // Đảm bảo session được ghi vào disk trước khi redirect
+        session_write_close();
+        
+        // Clean output buffer nếu có
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        
+        header("Location: " . $redirect_url);
         exit();
     } else {
         // Đăng nhập thất bại, hiển thị thông báo lỗi
         $error_message = 'fail';
         
-        if ($login_result === 'pending') {
-            $error_message = 'pending';
-        } else if ($login_result === 'locked') {
+        if ($login_result === 'locked') {
             $error_message = 'locked';
         }
         
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
         header("Location: ../../view/User/login.php?msg=$error_message");
         exit();
     }
@@ -109,14 +142,21 @@ if (isset($_GET['action']) && $_GET['action'] == 'logout') {
     // Xóa cookie nếu có
     if (isset($_COOKIE['remember_token'])) {
         setcookie('remember_token', '', time() - 3600, '/');
-        removeRememberToken($_SESSION['user_id']);
+        if (isset($_SESSION['user_id'])) {
+            removeRememberToken($_SESSION['user_id']);
+        }
     }
     
     // Hủy session
     session_unset();
     session_destroy();
     
-    header('Location: ../../index.php');
+    // Đăng xuất → Vẫn ở trang home, chỉ là chưa login
+    header('Location: ../../view/User/home.php');
     exit();
 }
+
+// Nếu không có action nào, redirect về trang chủ
+header('Location: ../../view/User/home.php');
+exit();
 ?>

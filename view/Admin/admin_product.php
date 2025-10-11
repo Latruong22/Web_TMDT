@@ -49,108 +49,245 @@ function truncateText($text, $limit = 120) {
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý sản phẩm</title>
+    <title>Quản lý sản phẩm - Snowboard Admin</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="../../config/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="../../Css/Admin/admin_home.css">
     <link rel="stylesheet" href="../../Css/Admin/admin_product.css">
 </head>
 <body>
-    <div class="admin-container">
-        <header class="page-header">
-            <h1>Quản lý sản phẩm</h1>
-            <a class="back-link" href="admin_home.php">← Quay lại bảng điều khiển</a>
-        </header>
+    <!-- Sidebar Navigation -->
+    <div class="admin-sidebar" id="adminSidebar">
+        <div class="sidebar-header">
+            <img src="../../Images/logo/logo.jpg" alt="Logo" class="sidebar-logo">
+            <h4 class="sidebar-title">Snowboard Admin</h4>
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a href="admin_home.php" class="nav-link">
+                <i class="fas fa-home"></i>
+                <span>Bảng điều khiển</span>
+            </a>
+            <a href="admin_product.php" class="nav-link active">
+                <i class="fas fa-box"></i>
+                <span>Quản lý sản phẩm</span>
+            </a>
+            <a href="admin_order.php" class="nav-link">
+                <i class="fas fa-shopping-cart"></i>
+                <span>Quản lý đơn hàng</span>
+            </a>
+            <a href="admin_user.php" class="nav-link">
+                <i class="fas fa-users"></i>
+                <span>Quản lý người dùng</span>
+            </a>
+            <a href="admin_promotion.php" class="nav-link">
+                <i class="fas fa-tags"></i>
+                <span>Khuyến mãi & Voucher</span>
+            </a>
+            <a href="admin_review.php" class="nav-link">
+                <i class="fas fa-star"></i>
+                <span>Quản lý đánh giá</span>
+            </a>
+            <a href="admin_revenue.php" class="nav-link">
+                <i class="fas fa-chart-line"></i>
+                <span>Báo cáo doanh thu</span>
+            </a>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <a href="../../controller/controller_User/controller.php?action=logout" class="nav-link logout-link">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Đăng xuất</span>
+            </a>
+        </div>
+    </div>
 
-        <?php if ($alert_text): ?>
-            <div class="alert <?php echo in_array($msg, ['created', 'updated', 'deleted', 'removed']) ? 'success' : 'error'; ?>">
-                <?php echo htmlspecialchars($alert_text); ?>
+    <!-- Main Content -->
+    <div class="admin-content">
+        <!-- Top Navbar -->
+        <nav class="top-navbar">
+            <button class="menu-toggle" id="menuToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="navbar-title">
+                <h5 class="mb-0">Quản lý sản phẩm</h5>
             </div>
-        <?php endif; ?>
-
-        <section class="form-section">
-            <div class="form-header">
-                <h2><?php echo $edit_product ? 'Cập nhật sản phẩm' : 'Thêm sản phẩm mới'; ?></h2>
-                <?php if ($edit_product): ?>
-                    <a class="btn-secondary" href="admin_product.php">+ Thêm sản phẩm mới</a>
-                <?php endif; ?>
-            </div>
-            <form class="product-form" method="post" action="../../controller/controller_Admin/admin_product_controller.php" enctype="multipart/form-data">
-                <input type="hidden" name="action" value="<?php echo $edit_product ? 'update' : 'add'; ?>">
-                <?php if ($edit_product): ?>
-                    <input type="hidden" name="product_id" value="<?php echo (int)$edit_product['product_id']; ?>">
-                    <input type="hidden" name="current_image" value="<?php echo htmlspecialchars($edit_product['image'] ?? ''); ?>">
-                <?php endif; ?>
-
-                <div class="form-grid">
-                    <label>
-                        Tên sản phẩm
-                        <input type="text" name="name" value="<?php echo htmlspecialchars($edit_product['name'] ?? ''); ?>" required>
-                    </label>
-                    <label>
-                        Giá bán (VND)
-                        <input type="number" name="price" step="1000" min="0" value="<?php echo isset($edit_product['price']) ? htmlspecialchars($edit_product['price']) : ''; ?>" required>
-                    </label>
-                    <label>
-                        Khuyến mãi (%)
-                        <input type="number" name="manual_discount" step="0.1" min="0" max="100" value="<?php echo isset($edit_product['manual_discount']) ? htmlspecialchars($edit_product['manual_discount']) : 0; ?>">
-                        <small>Nhập % giảm giá thủ công (0 - 100). Để 0 nếu không khuyến mãi.</small>
-                    </label>
-                    <label>
-                        Số lượng trong kho
-                        <input type="number" name="stock" min="0" value="<?php echo isset($edit_product['stock']) ? (int)$edit_product['stock'] : 0; ?>" required>
-                    </label>
-                    <label>
-                        Danh mục
-                        <select name="category_id" required>
-                            <option value="">-- Chọn danh mục --</option>
-                            <?php foreach ($categories as $category): ?>
-                                <option value="<?php echo (int)$category['category_id']; ?>" <?php echo ($edit_product && (int)$edit_product['category_id'] === (int)$category['category_id']) ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($category['name']); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </label>
-                    <label>
-                        Trạng thái
-                        <select name="status" required>
-                            <?php foreach ($statuses as $value => $label): ?>
-                                <option value="<?php echo $value; ?>" <?php echo ($edit_product ? $edit_product['status'] === $value : $value === 'active') ? 'selected' : ''; ?>>
-                                    <?php echo $label; ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </label>
-                    <label>
-                        Ảnh sản phẩm
-                        <input type="file" name="image" accept="image/*" <?php echo $edit_product ? '' : 'required'; ?>>
-                        <small>Định dạng: JPG, PNG, GIF, WEBP. Tối đa 2MB.</small>
-                    </label>
+            <div class="navbar-right">
+                <span class="navbar-time" id="dashboard-clock"></span>
+                <div class="navbar-user">
+                    <i class="fas fa-user-circle"></i>
+                    <span><?php echo htmlspecialchars($_SESSION['fullname'] ?? 'Admin'); ?></span>
                 </div>
+            </div>
+        </nav>
 
-                <label>
-                    Mô tả sản phẩm
-                    <textarea name="description" rows="4" placeholder="Nhập mô tả chi tiết..."><?php echo htmlspecialchars($edit_product['description'] ?? ''); ?></textarea>
-                </label>
+        <!-- Main Content Area -->
+        <div class="container-fluid py-4">
+            <div class="admin-container">
 
-                <?php if ($edit_product && !empty($edit_product['image'])): ?>
-                    <div class="current-image">
-                        <p>Ảnh hiện tại:</p>
-                        <img src="../../<?php echo htmlspecialchars($edit_product['image']); ?>" alt="Ảnh sản phẩm">
+                <?php if ($alert_text): ?>
+                    <div class="alert alert-<?php echo in_array($msg, ['created', 'updated', 'deleted', 'removed']) ? 'success' : 'danger'; ?> alert-dismissible fade show" role="alert">
+                        <?php echo htmlspecialchars($alert_text); ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 <?php endif; ?>
 
-                <div class="form-actions">
-                    <button type="submit" class="btn-primary"><?php echo $edit_product ? 'Cập nhật' : 'Thêm sản phẩm'; ?></button>
-                    <?php if ($edit_product): ?>
-                        <a class="btn-secondary" href="admin_product.php">Hủy</a>
-                    <?php endif; ?>
-                </div>
-            </form>
-        </section>
+                <section class="form-section card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><?php echo $edit_product ? 'Cập nhật sản phẩm' : 'Thêm sản phẩm mới'; ?></h5>
+                        <?php if ($edit_product): ?>
+                            <a class="btn btn-sm btn-secondary" href="admin_product.php">
+                                <i class="fas fa-plus me-1"></i>Thêm sản phẩm mới
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" action="../../controller/controller_Admin/admin_product_controller.php" enctype="multipart/form-data">
+                            <input type="hidden" name="action" value="<?php echo $edit_product ? 'update' : 'add'; ?>">
+                            <?php if ($edit_product): ?>
+                                <input type="hidden" name="product_id" value="<?php echo (int)$edit_product['product_id']; ?>">
+                                <input type="hidden" name="current_image" value="<?php echo htmlspecialchars($edit_product['image'] ?? ''); ?>">
+                            <?php endif; ?>
 
-        <section class="table-section">
-            <h2>Danh sách sản phẩm</h2>
-            <div class="table-responsive">
-                <table>
+                            <!-- Thông tin cơ bản -->
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-12">
+                                    <label class="form-label">
+                                        <i class="fas fa-tag text-primary me-1"></i>Tên sản phẩm
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" name="name" class="form-control" placeholder="Nhập tên sản phẩm..." value="<?php echo htmlspecialchars($edit_product['name'] ?? ''); ?>" required>
+                                </div>
+                            </div>
+
+                            <!-- Giá và khuyến mãi -->
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">
+                                        <i class="fas fa-dollar-sign text-success me-1"></i>Giá bán (VND)
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="number" name="price" class="form-control" step="1000" min="0" placeholder="0" value="<?php echo isset($edit_product['price']) ? htmlspecialchars($edit_product['price']) : ''; ?>" required>
+                                        <span class="input-group-text">₫</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">
+                                        <i class="fas fa-percent text-warning me-1"></i>Khuyến mãi (%)
+                                    </label>
+                                    <input type="number" name="manual_discount" class="form-control" step="0.1" min="0" max="100" placeholder="0" value="<?php echo isset($edit_product['manual_discount']) ? htmlspecialchars($edit_product['manual_discount']) : 0; ?>">
+                                    <small class="form-text text-muted">Để 0 nếu không khuyến mãi</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">
+                                        <i class="fas fa-warehouse text-info me-1"></i>Số lượng trong kho
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="number" name="stock" class="form-control" min="0" placeholder="0" value="<?php echo isset($edit_product['stock']) ? (int)$edit_product['stock'] : 0; ?>" required>
+                                </div>
+                            </div>
+
+                            <!-- Danh mục và trạng thái -->
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">
+                                        <i class="fas fa-list text-primary me-1"></i>Danh mục
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <select name="category_id" class="form-select" required>
+                                        <option value="">-- Chọn danh mục --</option>
+                                        <?php foreach ($categories as $category): ?>
+                                            <option value="<?php echo (int)$category['category_id']; ?>" <?php echo ($edit_product && (int)$edit_product['category_id'] === (int)$category['category_id']) ? 'selected' : ''; ?>>
+                                                <?php echo htmlspecialchars($category['name']); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">
+                                        <i class="fas fa-toggle-on text-success me-1"></i>Trạng thái
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <select name="status" class="form-select" required>
+                                        <?php foreach ($statuses as $value => $label): ?>
+                                            <option value="<?php echo $value; ?>" <?php echo ($edit_product ? $edit_product['status'] === $value : $value === 'active') ? 'selected' : ''; ?>>
+                                                <?php echo $label; ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Mô tả -->
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-align-left text-secondary me-1"></i>Mô tả sản phẩm
+                                </label>
+                                <textarea name="description" class="form-control" rows="4" placeholder="Nhập mô tả chi tiết về sản phẩm..."><?php echo htmlspecialchars($edit_product['description'] ?? ''); ?></textarea>
+                            </div>
+
+                            <!-- Ảnh sản phẩm -->
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-image text-danger me-1"></i>Ảnh sản phẩm
+                                    <?php if (!$edit_product): ?>
+                                        <span class="text-danger">*</span>
+                                    <?php endif; ?>
+                                </label>
+                                <input type="file" name="image" class="form-control" accept="image/*" id="imageInput" <?php echo $edit_product ? '' : 'required'; ?>>
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>Định dạng: JPG, PNG, GIF, WEBP. Tối đa 2MB.
+                                </small>
+                                
+                                <?php if ($edit_product && !empty($edit_product['image'])): ?>
+                                    <div class="mt-3">
+                                        <label class="form-label text-muted">Ảnh hiện tại:</label>
+                                        <div class="border rounded p-2" style="max-width: 200px;">
+                                            <img src="../../<?php echo htmlspecialchars($edit_product['image']); ?>" alt="Ảnh sản phẩm" class="img-fluid rounded" id="currentImage">
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+                                
+                                <!-- Image Preview -->
+                                <div id="imagePreview" class="mt-3" style="display: none;">
+                                    <label class="form-label text-muted">Xem trước:</label>
+                                    <div class="border rounded p-2" style="max-width: 200px;">
+                                        <img id="previewImg" src="" alt="Preview" class="img-fluid rounded">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-actions mt-4">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-1"></i><?php echo $edit_product ? 'Cập nhật' : 'Thêm sản phẩm'; ?>
+                                </button>
+                                <?php if ($edit_product): ?>
+                                    <a class="btn btn-secondary" href="admin_product.php">
+                                        <i class="fas fa-times me-1"></i>Hủy
+                                    </a>
+                                <?php endif; ?>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+
+                <section class="table-section card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Danh sách sản phẩm</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -168,7 +305,7 @@ function truncateText($text, $limit = 120) {
                     <tbody>
                         <?php if (empty($products)): ?>
                             <tr>
-                                <td colspan="9" class="empty">Chưa có sản phẩm nào.</td>
+                                <td colspan="10" class="text-center empty">Chưa có sản phẩm nào.</td>
                             </tr>
                         <?php else: ?>
                             <?php foreach ($products as $product): ?>
@@ -211,24 +348,38 @@ function truncateText($text, $limit = 120) {
                                     </td>
                                     <td><?php echo date('d/m/Y H:i', strtotime($product['created_at'])); ?></td>
                                     <td class="actions">
-                                        <a class="btn-link" href="admin_product.php?action=edit&id=<?php echo (int)$product['product_id']; ?>">Sửa</a>
-                                        <a class="btn-link danger" href="../../controller/controller_Admin/admin_product_controller.php?action=delete&id=<?php echo (int)$product['product_id']; ?>" data-confirm="Chuyển sản phẩm sang trạng thái ngừng bán?">Ngừng bán</a>
+                                        <a class="btn btn-sm btn-primary me-1" href="admin_product.php?action=edit&id=<?php echo (int)$product['product_id']; ?>">
+                                            <i class="fas fa-edit"></i> Sửa
+                                        </a>
+                                        <a class="btn btn-sm btn-warning me-1" href="../../controller/controller_Admin/admin_product_controller.php?action=delete&id=<?php echo (int)$product['product_id']; ?>" data-confirm="Chuyển sản phẩm sang trạng thái ngừng bán?">
+                                            <i class="fas fa-ban"></i> Ngừng bán
+                                        </a>
                                         <?php if ($product['status'] === 'inactive'): ?>
-                                            <a class="btn-link warning" href="../../controller/controller_Admin/admin_product_controller.php?action=hard-delete&id=<?php echo (int)$product['product_id']; ?>&image=<?php echo urlencode($product['image'] ?? ''); ?>" data-confirm="Xóa vĩnh viễn sản phẩm này?">Xóa</a>
+                                            <a class="btn btn-sm btn-danger" href="../../controller/controller_Admin/admin_product_controller.php?action=hard-delete&id=<?php echo (int)$product['product_id']; ?>&image=<?php echo urlencode($product['image'] ?? ''); ?>" data-confirm="Xóa vĩnh viễn sản phẩm này?">
+                                                <i class="fas fa-trash"></i> Xóa
+                                            </a>
                                         <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
-        </section>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
     </div>
 
+    <!-- Bootstrap JS -->
+    <script src="../../config/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="../../Js/Admin/home.js"></script>
     <script src="../../Js/Admin/product.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Confirm delete
             document.querySelectorAll('[data-confirm]').forEach(function(link) {
                 link.addEventListener('click', function(e) {
                     if (!confirm(link.getAttribute('data-confirm'))) {
@@ -236,6 +387,48 @@ function truncateText($text, $limit = 120) {
                     }
                 });
             });
+
+            // Image preview
+            const imageInput = document.getElementById('imageInput');
+            const imagePreview = document.getElementById('imagePreview');
+            const previewImg = document.getElementById('previewImg');
+            
+            if (imageInput) {
+                imageInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        // Check file size (2MB = 2097152 bytes)
+                        if (file.size > 2097152) {
+                            alert('Kích thước ảnh quá lớn! Vui lòng chọn ảnh nhỏ hơn 2MB.');
+                            imageInput.value = '';
+                            imagePreview.style.display = 'none';
+                            return;
+                        }
+                        
+                        // Show preview
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            previewImg.src = e.target.result;
+                            imagePreview.style.display = 'block';
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        imagePreview.style.display = 'none';
+                    }
+                });
+            }
+
+            // Format price input
+            const priceInput = document.querySelector('input[name="price"]');
+            if (priceInput) {
+                priceInput.addEventListener('blur', function() {
+                    if (this.value) {
+                        // Round to nearest 1000
+                        const value = Math.round(parseFloat(this.value) / 1000) * 1000;
+                        this.value = value;
+                    }
+                });
+            }
         });
     </script>
 </body>

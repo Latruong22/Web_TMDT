@@ -13,15 +13,13 @@ if (!isset($_SESSION['user_id']) && isset($_COOKIE['remember_token'])) {
     }
 }
 
-// Chuyển hướng dựa trên trạng thái đăng nhập và vai trò
-if (isset($_SESSION['user_id'])) {
-    if ($_SESSION['role'] == 'admin') {
-        header('Location: view/Admin/admin_home.php');
-    } else {
-        header('Location: view/User/home.php');
-    }
+// Chuyển hướng dựa trên vai trò
+if (isset($_SESSION['user_id']) && $_SESSION['role'] == 'admin') {
+    // Admin → Admin panel
+    header('Location: view/Admin/admin_home.php');
     exit();
 } else {
+    // User hoặc Guest → Trang home duy nhất
     header('Location: view/User/home.php');
     exit();
 }

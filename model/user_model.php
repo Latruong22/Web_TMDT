@@ -4,25 +4,22 @@ require_once 'database.php';
 // Đăng ký người dùng mới
 function registerUser($fullname, $email, $password, $phone, $address) {
     global $conn;
-    // Kiểm tra email đã tồn tại chưa
-    $stmt = $conn->prepare("SELECT user_id FROM users WHERE email = ?");
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
-    $stmt->store_result();  
-    if ($stmt->num_rows > 0) {
-        return "exists"; // Email đã tồn tại
+    
+    // Kiểm tra email đã tồn tại
+    $check = $conn->prepare("SELECT user_id FROM users WHERE email = ?");
+    $check->bind_param("s", $email);
+    $check->execute();
+    if($check->get_result()->num_rows > 0) {
+        return false; // Email đã tồn tại
     }
-    $stmt->close();
-
-    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-    $status = 'pending'; // Thêm trạng thái chờ xác nhận email
-    $stmt = $conn->prepare("INSERT INTO users (fullname, email, password, phone, address, status) VALUES (?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("ssssss", $fullname, $email, $hashedPassword, $phone, $address, $status);
-    if ($stmt->execute()) {
-        return true;
-    } else {
-        return "error";
-    }
+    
+    // Mã hóa mật khẩu
+    $hashed = password_hash($password, PASSWORD_DEFAULT);
+    
+    // Thêm user mới với status active (bỏ qua xác nhận email)
+    $stmt = $conn->prepare("INSERT INTO users (fullname, email, password, phone, address, status, role) VALUES (?, ?, ?, ?, ?, 'active', 'user')");
+    $stmt->bind_param("sssss", $fullname, $email, $hashed, $phone, $address);
+    return $stmt->execute();
 }
 
 // Thêm bảng user_verification nếu chưa có
@@ -88,9 +85,8 @@ function loginUser($email, $password) {
     $stmt->execute();
     $result = $stmt->get_result();
     if ($result && $row = $result->fetch_assoc()) {
-        if ($row['status'] === 'pending') {
-            return 'pending'; // Tài khoản chưa xác nhận email
-        } else if ($row['status'] === 'locked') {
+        // Chỉ kiểm tra locked, bỏ qua pending vì đã không dùng nữa
+        if ($row['status'] === 'locked') {
             return 'locked'; // Tài khoản bị khóa
         }
         
@@ -114,9 +110,7 @@ function loginUser($email, $password) {
 // Kiểm tra đăng nhập đúng không
 function validateLogin($email, $password) {
     $result = loginUser($email, $password);
-    if ($result === 'pending') {
-        return 'pending';
-    } else if ($result === 'locked') {
+    if ($result === 'locked') {
         return 'locked';
     } else if ($result === false) {
         return 'invalid';
