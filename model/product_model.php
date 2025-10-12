@@ -36,12 +36,17 @@ function getProductById($product_id) {
 
 /**
  * Thêm sản phẩm mới.
+ * Returns product_id if successful, false otherwise.
  */
 function createProduct($name, $price, $discount, $description, $image_path, $stock, $category_id, $status = 'active') {
     global $conn;
     $stmt = $conn->prepare("INSERT INTO products (name, price, manual_discount, description, image, stock, category_id, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
     $stmt->bind_param('sddssiis', $name, $price, $discount, $description, $image_path, $stock, $category_id, $status);
-    return $stmt->execute();
+    
+    if ($stmt->execute()) {
+        return $conn->insert_id; // Return the new product_id
+    }
+    return false;
 }
 
 /**

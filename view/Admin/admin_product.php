@@ -236,17 +236,17 @@ function truncateText($text, $limit = 120) {
                                 <textarea name="description" class="form-control" rows="4" placeholder="Nhập mô tả chi tiết về sản phẩm..."><?php echo htmlspecialchars($edit_product['description'] ?? ''); ?></textarea>
                             </div>
 
-                            <!-- Ảnh sản phẩm -->
+                            <!-- Ảnh sản phẩm chính -->
                             <div class="mb-3">
                                 <label class="form-label">
-                                    <i class="fas fa-image text-danger me-1"></i>Ảnh sản phẩm
+                                    <i class="fas fa-image text-danger me-1"></i>Ảnh chính (Main Image)
                                     <?php if (!$edit_product): ?>
                                         <span class="text-danger">*</span>
                                     <?php endif; ?>
                                 </label>
-                                <input type="file" name="image" class="form-control" accept="image/*" id="imageInput" <?php echo $edit_product ? '' : 'required'; ?>>
+                                <input type="file" name="main_image" class="form-control" accept="image/*" id="mainImageInput" <?php echo $edit_product ? '' : 'required'; ?>>
                                 <small class="form-text text-muted">
-                                    <i class="fas fa-info-circle me-1"></i>Định dạng: JPG, PNG, GIF, WEBP. Tối đa 2MB.
+                                    <i class="fas fa-info-circle me-1"></i>Ảnh đại diện hiển thị trong danh sách sản phẩm. Định dạng: JPG, PNG, GIF, WEBP. Tối đa 2MB.
                                 </small>
                                 
                                 <?php if ($edit_product && !empty($edit_product['image'])): ?>
@@ -258,12 +258,30 @@ function truncateText($text, $limit = 120) {
                                     </div>
                                 <?php endif; ?>
                                 
-                                <!-- Image Preview -->
-                                <div id="imagePreview" class="mt-3" style="display: none;">
+                                <!-- Main Image Preview -->
+                                <div id="mainImagePreview" class="mt-3" style="display: none;">
                                     <label class="form-label text-muted">Xem trước:</label>
                                     <div class="border rounded p-2" style="max-width: 200px;">
-                                        <img id="previewImg" src="" alt="Preview" class="img-fluid rounded">
+                                        <img id="mainPreviewImg" src="" alt="Preview" class="img-fluid rounded">
                                     </div>
+                                </div>
+                            </div>
+
+                            <!-- Ảnh chi tiết (Multiple) -->
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-images text-info me-1"></i>Ảnh chi tiết (Detail Gallery)
+                                    <span class="badge bg-info">Tùy chọn</span>
+                                </label>
+                                <input type="file" name="detail_images[]" class="form-control" accept="image/*" id="detailImagesInput" multiple>
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>Chọn nhiều ảnh (Ctrl + Click hoặc Shift + Click). Tối đa 8 ảnh. Mỗi ảnh tối đa 2MB.
+                                </small>
+                                
+                                <!-- Detail Images Preview -->
+                                <div id="detailImagesPreview" class="mt-3" style="display: none;">
+                                    <label class="form-label text-muted">Đã chọn <span id="detailImageCount">0</span> ảnh:</label>
+                                    <div id="detailImagesList" class="d-flex flex-wrap gap-2"></div>
                                 </div>
                             </div>
 
@@ -388,32 +406,92 @@ function truncateText($text, $limit = 120) {
                 });
             });
 
-            // Image preview
-            const imageInput = document.getElementById('imageInput');
-            const imagePreview = document.getElementById('imagePreview');
-            const previewImg = document.getElementById('previewImg');
+            // Main image preview
+            const mainImageInput = document.getElementById('mainImageInput');
+            const mainImagePreview = document.getElementById('mainImagePreview');
+            const mainPreviewImg = document.getElementById('mainPreviewImg');
             
-            if (imageInput) {
-                imageInput.addEventListener('change', function(e) {
+            if (mainImageInput) {
+                mainImageInput.addEventListener('change', function(e) {
                     const file = e.target.files[0];
                     if (file) {
                         // Check file size (2MB = 2097152 bytes)
                         if (file.size > 2097152) {
                             alert('Kích thước ảnh quá lớn! Vui lòng chọn ảnh nhỏ hơn 2MB.');
-                            imageInput.value = '';
-                            imagePreview.style.display = 'none';
+                            mainImageInput.value = '';
+                            mainImagePreview.style.display = 'none';
                             return;
                         }
                         
                         // Show preview
                         const reader = new FileReader();
                         reader.onload = function(e) {
-                            previewImg.src = e.target.result;
-                            imagePreview.style.display = 'block';
+                            mainPreviewImg.src = e.target.result;
+                            mainImagePreview.style.display = 'block';
                         };
                         reader.readAsDataURL(file);
                     } else {
-                        imagePreview.style.display = 'none';
+                        mainImagePreview.style.display = 'none';
+                    }
+                });
+            }
+
+            // Detail images preview (Multiple)
+            const detailImagesInput = document.getElementById('detailImagesInput');
+            const detailImagesPreview = document.getElementById('detailImagesPreview');
+            const detailImagesList = document.getElementById('detailImagesList');
+            const detailImageCount = document.getElementById('detailImageCount');
+            
+            if (detailImagesInput) {
+                detailImagesInput.addEventListener('change', function(e) {
+                    const files = e.target.files;
+                    
+                    if (files.length > 0) {
+                        // Check max 8 images
+                        if (files.length > 8) {
+                            alert('Chỉ được chọn tối đa 8 ảnh chi tiết!');
+                            detailImagesInput.value = '';
+                            detailImagesPreview.style.display = 'none';
+                            return;
+                        }
+                        
+                        // Clear previous previews
+                        detailImagesList.innerHTML = '';
+                        let validFiles = 0;
+                        
+                        // Show previews
+                        Array.from(files).forEach((file, index) => {
+                            // Check file size
+                            if (file.size > 2097152) {
+                                alert(`Ảnh "${file.name}" quá lớn! Vui lòng chọn ảnh nhỏ hơn 2MB.`);
+                                return;
+                            }
+                            
+                            validFiles++;
+                            
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                const div = document.createElement('div');
+                                div.className = 'border rounded p-1';
+                                div.style.width = '100px';
+                                div.innerHTML = `
+                                    <img src="${e.target.result}" alt="Detail ${index + 1}" class="img-fluid rounded" style="width: 100%; height: 90px; object-fit: cover;">
+                                    <small class="text-muted d-block text-center mt-1">#${index + 1}</small>
+                                `;
+                                detailImagesList.appendChild(div);
+                            };
+                            reader.readAsDataURL(file);
+                        });
+                        
+                        if (validFiles > 0) {
+                            detailImageCount.textContent = validFiles;
+                            detailImagesPreview.style.display = 'block';
+                        } else {
+                            detailImagesInput.value = '';
+                            detailImagesPreview.style.display = 'none';
+                        }
+                    } else {
+                        detailImagesPreview.style.display = 'none';
                     }
                 });
             }

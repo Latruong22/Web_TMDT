@@ -8,7 +8,7 @@ checkAccess('admin');
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 
 /**
- * Xử lý upload ảnh sản phẩm.
+ * Xử lý upload ảnh sản phẩm (Legacy - for backward compatibility).
  */
 function processProductImage($file, $existing_path = null) {
     if ($file['error'] === UPLOAD_ERR_NO_FILE) {
@@ -57,6 +57,108 @@ function processProductImage($file, $existing_path = null) {
     return ['success' => false, 'message' => 'Không thể lưu ảnh lên máy chủ.'];
 }
 
+/**
+ * Xử lý upload nhiều ảnh vào folder Sp{product_id}/ (NEW - Multiple images support)
+ * 
+ * @param int $product_id ID của sản phẩm
+ * @param array $main_file Main image file từ $_FILES
+ * @param array $detail_files Detail images từ $_FILES (multiple)
+ * @return array ['success' => bool, 'path' => string, 'message' => string, 'uploaded_count' => int]
+ */
+function processMultipleProductImages($product_id, $main_file, $detail_files = null) {
+    $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    $max_size = 2 * 1024 * 1024; // 2MB
+    
+    // Tạo folder Sp{product_id}
+    $folder_name = "Sp" . $product_id;
+    $folder_path = __DIR__ . "/../../Images/product/" . $folder_name;
+    
+    if (!is_dir($folder_path)) {
+        if (!mkdir($folder_path, 0755, true)) {
+            return ['success' => false, 'message' => 'Không thể tạo thư mục sản phẩm.'];
+        }
+    }
+    
+    // Upload main image
+    if ($main_file['error'] !== UPLOAD_ERR_NO_FILE) {
+        if ($main_file['error'] !== UPLOAD_ERR_OK) {
+            return ['success' => false, 'message' => 'Tải ảnh chính thất bại.'];
+        }
+        
+        if (!in_array($main_file['type'], $allowed_types)) {
+            return ['success' => false, 'message' => 'Định dạng ảnh chính không hợp lệ.'];
+        }
+        
+        if ($main_file['size'] > $max_size) {
+            return ['success' => false, 'message' => 'Ảnh chính vượt quá 2MB.'];
+        }
+        
+        $extension = pathinfo($main_file['name'], PATHINFO_EXTENSION);
+        $main_filename = 'main.' . strtolower($extension);
+        $main_target = $folder_path . '/' . $main_filename;
+        
+        if (!move_uploaded_file($main_file['tmp_name'], $main_target)) {
+            return ['success' => false, 'message' => 'Không thể lưu ảnh chính.'];
+        }
+    }
+    
+    // Upload detail images (optional)
+    $uploaded_count = 0;
+    if ($detail_files && is_array($detail_files['tmp_name'])) {
+        $detail_count = count($detail_files['tmp_name']);
+        
+        // Max 8 detail images
+        if ($detail_count > 8) {
+            return ['success' => false, 'message' => 'Chỉ được upload tối đa 8 ảnh chi tiết.'];
+        }
+        
+        for ($i = 0; $i < $detail_count; $i++) {
+            // Skip if no file uploaded at this index
+            if ($detail_files['error'][$i] === UPLOAD_ERR_NO_FILE) {
+                continue;
+            }
+            
+            if ($detail_files['error'][$i] !== UPLOAD_ERR_OK) {
+                continue; // Skip failed uploads
+            }
+            
+            if (!in_array($detail_files['type'][$i], $allowed_types)) {
+                continue; // Skip invalid types
+            }
+            
+            if ($detail_files['size'][$i] > $max_size) {
+                continue; // Skip oversized files
+            }
+            
+            $extension = pathinfo($detail_files['name'][$i], PATHINFO_EXTENSION);
+            $detail_filename = 'detail_' . ($uploaded_count + 1) . '.' . strtolower($extension);
+            $detail_target = $folder_path . '/' . $detail_filename;
+            
+            if (move_uploaded_file($detail_files['tmp_name'][$i], $detail_target)) {
+                $uploaded_count++;
+            }
+        }
+    }
+    
+    // Return main image path for database
+    $main_image_path = "Images/product/" . $folder_name . "/main.jpg"; // Default to .jpg
+    
+    // Find actual main image extension
+    foreach (['jpg', 'jpeg', 'png', 'gif', 'webp'] as $ext) {
+        if (file_exists($folder_path . '/main.' . $ext)) {
+            $main_image_path = "Images/product/" . $folder_name . "/main." . $ext;
+            break;
+        }
+    }
+    
+    return [
+        'success' => true,
+        'path' => $main_image_path,
+        'uploaded_count' => $uploaded_count,
+        'message' => "Đã upload 1 ảnh chính" . ($uploaded_count > 0 ? " và {$uploaded_count} ảnh chi tiết" : "") . "."
+    ];
+}
+
 switch ($action) {
     case 'add':
         // Chuẩn hóa dữ liệu đầu vào nhằm tránh ký tự dư thừa và mã độc
@@ -73,26 +175,42 @@ switch ($action) {
             exit();
         }
 
-    $file = $_FILES['image'] ?? ['error' => UPLOAD_ERR_NO_FILE];
-    $upload = processProductImage($file);
-        if (!$upload['success']) {
-            header('Location: ../../view/Admin/admin_product.php?msg=' . urlencode($upload['message']));
-            exit();
-        }
-
-        $image_path = $upload['path'] ?? '';
-
-        if (!$image_path) {
+        // Check main image required
+        $main_file = $_FILES['main_image'] ?? ['error' => UPLOAD_ERR_NO_FILE];
+        if ($main_file['error'] === UPLOAD_ERR_NO_FILE) {
             header('Location: ../../view/Admin/admin_product.php?msg=noimage');
             exit();
         }
 
-        if (createProduct($name, $price, $manual_discount, $description, $image_path, $stock, $category_id, $status)) {
-            header('Location: ../../view/Admin/admin_product.php?msg=created');
+        // Create product first to get product_id
+        // Use temporary image path first
+        $temp_image = 'Images/product/temp.jpg';
+        $product_id = createProduct($name, $price, $manual_discount, $description, $temp_image, $stock, $category_id, $status);
+        
+        if (!$product_id) {
+            header('Location: ../../view/Admin/admin_product.php?msg=error');
             exit();
         }
 
-        header('Location: ../../view/Admin/admin_product.php?msg=error');
+        // Now upload images to Sp{product_id} folder
+        $detail_files = $_FILES['detail_images'] ?? null;
+        $upload = processMultipleProductImages($product_id, $main_file, $detail_files);
+        
+        if (!$upload['success']) {
+            // Delete product if image upload fails
+            hardDeleteProduct($product_id);
+            header('Location: ../../view/Admin/admin_product.php?msg=' . urlencode($upload['message']));
+            exit();
+        }
+
+        // Update product with correct image path
+        $image_path = $upload['path'];
+        if (!updateProduct($product_id, $name, $price, $manual_discount, $description, $image_path, $stock, $category_id, $status)) {
+            header('Location: ../../view/Admin/admin_product.php?msg=error');
+            exit();
+        }
+
+        header('Location: ../../view/Admin/admin_product.php?msg=created');
         exit();
 
     case 'update':

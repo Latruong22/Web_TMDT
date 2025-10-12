@@ -49,7 +49,10 @@ $categories = getAllCategories();
                         <a class="nav-link" href="product_list.php"><i class="fas fa-snowboarding me-1"></i>Sản phẩm</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="cart.php"><i class="fas fa-shopping-cart me-1"></i>Giỏ hàng</a>
+                        <a class="nav-link" href="cart.php">
+                            <i class="fas fa-shopping-cart me-1"></i>Giỏ hàng
+                            <span class="cart-badge" id="cart-count">0</span>
+                        </a>
                     </li>
                     <?php if (isset($_SESSION['user_id'])): ?>
                         <li class="nav-item">
@@ -241,11 +244,11 @@ $categories = getAllCategories();
                                         <span class="original-price text-muted text-decoration-line-through me-2">
                                             <?php echo number_format($product['price'], 0, ',', '.'); ?>đ
                                         </span>
-                                        <span class="final-price fw-bold text-danger fs-5">
+                                        <span class="final-price fw-bold fs-5" style="color: #212529 !important;">
                                             <?php echo number_format($final_price, 0, ',', '.'); ?>đ
                                         </span>
                                     <?php else: ?>
-                                        <span class="final-price fw-bold fs-5">
+                                        <span class="final-price fw-bold fs-5" style="color: #212529 !important;">
                                             <?php echo number_format($product['price'], 0, ',', '.'); ?>đ
                                         </span>
                                     <?php endif; ?>
@@ -316,5 +319,31 @@ $categories = getAllCategories();
 
     <script src="../../config/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
     <script src="../../Js/User/home.js"></script>
+    <script>
+        // Update cart count on page load
+        function updateCartCount() {
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            const cartBadge = document.getElementById('cart-count');
+            if (cartBadge) {
+                cartBadge.textContent = totalItems;
+                if (totalItems === 0) {
+                    cartBadge.style.display = 'none';
+                } else {
+                    cartBadge.style.display = 'inline-block';
+                }
+            }
+        }
+        
+        // Update on page load
+        updateCartCount();
+        
+        // Update on storage change (when cart updated in other tabs)
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'cart') {
+                updateCartCount();
+            }
+        });
+    </script>
 </body>
 </html>

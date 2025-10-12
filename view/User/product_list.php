@@ -12,6 +12,32 @@ require_once '../../model/database.php';
 require_once '../../model/product_model.php';
 require_once '../../model/category_model.php';
 
+// Helper function: Get first image from product folder
+function getProductThumbnail($product_id, $fallback_image = '') {
+    $sp_folder = "Sp" . $product_id;
+    $folder_path = $_SERVER['DOCUMENT_ROOT'] . "/Web_TMDT/Images/product/" . $sp_folder . "/";
+    $folder_url = "/Web_TMDT/Images/product/" . $sp_folder . "/";
+    
+    // Try to get first image from folder
+    if (is_dir($folder_path)) {
+        $files = scandir($folder_path);
+        foreach ($files as $file) {
+            if ($file !== '.' && $file !== '..' && preg_match('/\.(jpg|jpeg|png|gif|webp)$/i', $file)) {
+                return $folder_url . $file;
+            }
+        }
+    }
+    
+    // Fallback to database image with absolute path
+    if ($fallback_image) {
+        // Convert relative database path to absolute
+        return "/Web_TMDT/" . $fallback_image;
+    }
+    
+    // Last resort: placeholder
+    return "/Web_TMDT/Images/product/placeholder.jpg";
+}
+
 // Lấy tham số lọc
 $category_id = isset($_GET['category']) ? intval($_GET['category']) : 0;
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
@@ -133,7 +159,7 @@ $categories = getAllCategories();
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
         <div class="container-fluid">
             <a class="navbar-brand d-flex align-items-center" href="home.php">
-                <img src="../../Images/logo/logo.jpg" alt="Logo" class="logo-img">
+                <img src="/Web_TMDT/Images/logo/logo.jpg" alt="Logo" class="logo-img">
                 <span class="ms-2 fw-bold">SNOWBOARD SHOP</span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -150,7 +176,7 @@ $categories = getAllCategories();
                     <li class="nav-item">
                         <a class="nav-link" href="cart.php">
                             <i class="fas fa-shopping-cart me-1"></i>Giỏ hàng
-                            <span class="cart-badge" id="cartCount">0</span>
+                            <span class="cart-badge" id="cart-count">0</span>
                         </a>
                     </li>
                     <?php if (isset($_SESSION['user_id'])): ?>
@@ -279,7 +305,7 @@ $categories = getAllCategories();
                     <!-- Banner Ad -->
                     <div class="filter-section">
                         <div class="sidebar-banner">
-                            <img src="../../Images/baner/baner4.jpg" alt="Sale Banner">
+                            <img src="/Web_TMDT/Images/baner/baner4.jpg" alt="Sale Banner">
                             <div class="sidebar-banner-content">
                                 <h6>Khuyến mãi đặc biệt</h6>
                                 <p>Giảm giá lên đến 30%</p>
@@ -342,7 +368,7 @@ $categories = getAllCategories();
                             <div class="product-card" data-aos="fade-up" itemscope itemtype="https://schema.org/Product">
                                 <div class="product-image-wrapper">
                                     <a href="product_detail.php?id=<?php echo $product['product_id']; ?>" aria-label="Xem chi tiết <?php echo htmlspecialchars($product['name']); ?>">
-                                        <img src="../../<?php echo htmlspecialchars($product['image']); ?>" 
+                                        <img src="<?php echo getProductThumbnail($product['product_id'], $product['image']); ?>" 
                                              alt="<?php echo htmlspecialchars($product['name']); ?>"
                                              class="product-image"
                                              loading="lazy"
@@ -466,38 +492,48 @@ $categories = getAllCategories();
     </div>
 
     <!-- Footer -->
-    <footer class="footer bg-dark text-white">
-        <div class="container py-5">
-            <div class="row">
-                <div class="col-md-4 mb-4">
-                    <h5 class="mb-3">Về Snowboard Shop</h5>
-                    <p class="text-muted">Chuyên cung cấp thiết bị trượt tuyết chất lượng cao, phục vụ đam mê của bạn.</p>
+    <footer class="footer bg-dark text-white py-5">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <h5 class="fw-bold mb-3">SNOWBOARD SHOP</h5>
+                    <p class="text-white-50">Điểm đến lý tưởng cho những người đam mê trượt tuyết và thể thao mùa đông.</p>
                     <div class="social-links mt-3">
-                        <a href="#"><i class="fab fa-facebook"></i></a>
-                        <a href="#"><i class="fab fa-instagram"></i></a>
-                        <a href="#"><i class="fab fa-youtube"></i></a>
+                        <a href="#" class="text-white me-3"><i class="fab fa-facebook fa-lg"></i></a>
+                        <a href="#" class="text-white me-3"><i class="fab fa-instagram fa-lg"></i></a>
+                        <a href="#" class="text-white me-3"><i class="fab fa-twitter fa-lg"></i></a>
+                        <a href="#" class="text-white"><i class="fab fa-youtube fa-lg"></i></a>
                     </div>
                 </div>
-                <div class="col-md-4 mb-4">
-                    <h5 class="mb-3">Liên kết nhanh</h5>
-                    <ul class="footer-links">
-                        <li><a href="home.php">Trang chủ</a></li>
-                        <li><a href="product_list.php">Sản phẩm</a></li>
-                        <li><a href="cart.php">Giỏ hàng</a></li>
-                        <li><a href="order_history.php">Đơn hàng</a></li>
+                <div class="col-lg-2 col-md-4">
+                    <h6 class="fw-bold mb-3">Liên kết</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="home.php" class="text-white-50 text-decoration-none">Trang chủ</a></li>
+                        <li><a href="product_list.php" class="text-white-50 text-decoration-none">Sản phẩm</a></li>
+                        <li><a href="cart.php" class="text-white-50 text-decoration-none">Giỏ hàng</a></li>
+                        <li><a href="order_history.php" class="text-white-50 text-decoration-none">Đơn hàng</a></li>
                     </ul>
                 </div>
-                <div class="col-md-4 mb-4">
-                    <h5 class="mb-3">Liên hệ</h5>
-                    <ul class="footer-contact">
-                        <li><i class="fas fa-map-marker-alt me-2"></i>Địa chỉ: 123 Đường ABC, TP.HCM</li>
-                        <li><i class="fas fa-phone me-2"></i>Hotline: 1900-xxxx</li>
-                        <li><i class="fas fa-envelope me-2"></i>Email: info@snowboard.vn</li>
+                <div class="col-lg-3 col-md-4">
+                    <h6 class="fw-bold mb-3">Chính sách</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white-50 text-decoration-none">Chính sách bảo mật</a></li>
+                        <li><a href="#" class="text-white-50 text-decoration-none">Điều khoản sử dụng</a></li>
+                        <li><a href="#" class="text-white-50 text-decoration-none">Chính sách đổi trả</a></li>
+                        <li><a href="#" class="text-white-50 text-decoration-none">Hướng dẫn mua hàng</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-4">
+                    <h6 class="fw-bold mb-3">Liên hệ</h6>
+                    <ul class="list-unstyled text-white-50">
+                        <li><i class="fas fa-map-marker-alt me-2"></i>123 Đường ABC, Quận XYZ, TP.HCM</li>
+                        <li><i class="fas fa-phone me-2"></i>0123 456 789</li>
+                        <li><i class="fas fa-envelope me-2"></i>info@snowboardshop.vn</li>
                     </ul>
                 </div>
             </div>
-            <hr class="my-4 border-secondary">
-            <div class="text-center">
+            <hr class="border-secondary my-4">
+            <div class="text-center text-white-50">
                 <p class="mb-0">&copy; 2025 Snowboard Shop. All rights reserved.</p>
             </div>
         </div>
@@ -519,5 +555,58 @@ $categories = getAllCategories();
 
     <script src="../../config/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
     <script src="../../Js/User/product_list.js"></script>
+    <script>
+        // Update cart count on page load
+        function updateCartCount() {
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            const cartBadge = document.getElementById('cart-count');
+            if (cartBadge) {
+                cartBadge.textContent = totalItems;
+                if (totalItems === 0) {
+                    cartBadge.style.display = 'none';
+                } else {
+                    cartBadge.style.display = 'inline-block';
+                }
+            }
+        }
+        
+        // Update on page load
+        updateCartCount();
+        
+        // Update on storage change (when cart updated in other tabs)
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'cart') {
+                updateCartCount();
+            }
+        });
+    </script>
+
+    <!-- Back to Top Button -->
+    <button id="backToTopBtn" class="back-to-top">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <script>
+        // Back to Top functionality
+        const backToTopBtn = document.getElementById('backToTopBtn');
+        
+        window.addEventListener('scroll', function() {
+            if (window.pageYOffset > 300) {
+                backToTopBtn.style.opacity = '1';
+                backToTopBtn.style.visibility = 'visible';
+            } else {
+                backToTopBtn.style.opacity = '0';
+                backToTopBtn.style.visibility = 'hidden';
+            }
+        });
+        
+        backToTopBtn.addEventListener('click', function() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+    </script>
 </body>
 </html>

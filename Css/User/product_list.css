@@ -640,7 +640,7 @@ body {
 .price-current {
   font-size: 1.3rem;
   font-weight: 700;
-  color: #ff4b2b;
+  color: #212529 !important;
 }
 
 .price-old {
@@ -1433,3 +1433,43 @@ body {
     margin-bottom: 1rem;
   }
 }
+
+/* ========== FORCE BLACK PRICE COLOR ========== */
+.price-current,
+.product-price .price-current,
+span.price-current,
+.price-current span {
+  color: #212529 !important;
+}
+
+/* Override Bootstrap and any other styles */
+.product-card .price-current,
+.product-item .price-current,
+div.product-price span.price-current {
+  color: #212529 !important;
+}
+
+/* ========== UPDATED FOOTER STYLES ========== */
+.footer h5, .footer h6 {
+  color: #fff;
+}
+
+.footer .list-unstyled li {
+  margin-bottom: 8px;
+}
+
+.footer .list-unstyled a:hover {
+  color: #fff !important;
+  padding-left: 5px;
+  transition: all 0.3s ease;
+}
+
+.footer .social-links a {
+  transition: all 0.3s ease;
+}
+
+.footer .social-links a:hover {
+  color: #f4b400 !important;
+  transform: translateY(-3px);
+}
+
