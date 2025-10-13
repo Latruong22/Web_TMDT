@@ -25,7 +25,8 @@
 }
 
 body {
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Barlow", sans-serif !important;
+  font-weight: 500;
   color: var(--text-dark);
   line-height: 1.6;
   overflow-x: hidden;
@@ -48,6 +49,7 @@ body {
 }
 
 .navbar-brand {
+  font-family: "Righteous", sans-serif !important;
   font-size: 1.3rem;
   letter-spacing: 0.5px;
   transition: var(--transition);
@@ -890,7 +892,8 @@ span.current-price,
 
 .related-product-card:hover {
   transform: translateY(-8px);
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+  border-color: #ffc107 !important;
 }
 
 .related-product-image {
@@ -908,7 +911,11 @@ span.current-price,
 }
 
 .related-product-card:hover .related-product-image img {
-  transform: scale(1.1);
+  transform: scale(1.08);
+}
+
+.related-product-card:hover .related-product-title a {
+  color: #ffc107 !important;
 }
 
 .badge-discount {
@@ -1605,7 +1612,7 @@ span.current-price,
   visibility: hidden;
   transition: all 0.3s ease;
   z-index: 1000;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1626,8 +1633,34 @@ span.current-price,
   margin-top: 80px;
 }
 
-.footer h5, .footer h6 {
+.footer h5,
+.footer h6 {
   color: #fff;
+}
+
+/* ========== FOOTER SOCIAL LINKS STYLING ========== */
+.social-links {
+  display: flex;
+  gap: 1rem;
+}
+
+.social-links a {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.social-links a:hover {
+  background: white;
+  color: #212529;
+  transform: translateY(-3px);
 }
 
 .footer .social-links a {
@@ -1649,3 +1682,49 @@ span.current-price,
   transition: all 0.3s ease;
 }
 
+/* ========== FONT FAMILY OVERRIDES ========== */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.display-1,
+.display-2,
+.display-3,
+.display-4,
+.display-5,
+.display-6,
+.product-name,
+.section-title,
+.modal-title {
+  font-family: "Righteous", sans-serif !important;
+}
+
+/* ========== COMPREHENSIVE FONT OVERRIDES ========== */
+/* Force font application to override Bootstrap */
+* {
+  font-family: inherit;
+}
+
+/* Default text elements */
+body,
+p,
+span,
+div,
+a,
+li,
+td,
+th,
+input,
+textarea,
+select,
+button,
+.card-text,
+.text-muted,
+.form-control,
+.btn,
+.modal-body {
+  font-family: "Barlow", sans-serif !important;
+  font-weight: 500 !important;
+}

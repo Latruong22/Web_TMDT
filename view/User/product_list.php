@@ -15,7 +15,9 @@ require_once '../../model/category_model.php';
 // Helper function: Get first image from product folder
 function getProductThumbnail($product_id, $fallback_image = '') {
     $sp_folder = "Sp" . $product_id;
-    $folder_path = $_SERVER['DOCUMENT_ROOT'] . "/Web_TMDT/Images/product/" . $sp_folder . "/";
+    
+    // Use __DIR__ for reliable path resolution
+    $folder_path = __DIR__ . "/../../Images/product/" . $sp_folder . "/";
     $folder_url = "/Web_TMDT/Images/product/" . $sp_folder . "/";
     
     // Try to get first image from folder
@@ -30,6 +32,10 @@ function getProductThumbnail($product_id, $fallback_image = '') {
     
     // Fallback to database image with absolute path
     if ($fallback_image) {
+        // Check if already absolute URL
+        if (strpos($fallback_image, 'http') === 0 || strpos($fallback_image, '/Web_TMDT/') === 0) {
+            return $fallback_image;
+        }
         // Convert relative database path to absolute
         return "/Web_TMDT/" . $fallback_image;
     }
@@ -143,13 +149,32 @@ $categories = getAllCategories();
     ?></title>
     
     <!-- Preconnect for faster loading -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
     <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Righteous&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
     
     <!-- Stylesheets -->
     <link rel="stylesheet" href="../../config/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="../../Css/User/product_list.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Font override để đảm bảo fonts hoạt động -->
+    <style>
+        body, p, div, span, a, button, input, select, textarea, .card-text, .btn, .nav-link { font-family: "Barlow", sans-serif !important; font-weight: 500 !important; }
+        h1, h2, h3, h4, h5, h6, .navbar-brand, .card-title, .product-title { font-family: "Righteous", sans-serif !important; }
+        /* Giữ font mặc định cho icons - Enhanced */
+        .fas, .far, .fal, .fab, [class*="fa-"], 
+        i.fas, i.far, i.fal, i.fab, i[class*="fa-"],
+        .footer .fas, .footer .far, .footer .fal, .footer .fab, .footer [class*="fa-"],
+        .social-links i, .social-links [class*="fa-"] { 
+            font-family: "Font Awesome 6 Free", "Font Awesome 6 Pro", "Font Awesome 6 Brands" !important; 
+            font-weight: 900 !important;
+        }
+    </style>
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="../../Images/logo/logo.jpg">
@@ -553,26 +578,11 @@ $categories = getAllCategories();
         </div>
     </div>
 
-    <script src="../../config/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../../Js/User/product_list.js"></script>
+    <script src="/Web_TMDT/config/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/Web_TMDT/Js/User/product_list.js?v=<?= time() ?>"></script>
     <script>
-        // Update cart count on page load
-        function updateCartCount() {
-            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-            const cartBadge = document.getElementById('cart-count');
-            if (cartBadge) {
-                cartBadge.textContent = totalItems;
-                if (totalItems === 0) {
-                    cartBadge.style.display = 'none';
-                } else {
-                    cartBadge.style.display = 'inline-block';
-                }
-            }
-        }
-        
-        // Update on page load
-        updateCartCount();
+        // Update cart count on page load (handled by product_list.js now)
+        // No need for inline script - updateCartCount() is called in product_list.js
         
         // Update on storage change (when cart updated in other tabs)
         window.addEventListener('storage', function(e) {

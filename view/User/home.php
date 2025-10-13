@@ -25,9 +25,25 @@ $categories = getAllCategories();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Snowboard Shop - Trang chủ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Righteous&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="../../config/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="../../Css/User/user_home.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Font override để đảm bảo fonts hoạt động -->
+    <style>
+        body, p, div, span, a, button, input, select, textarea, .card-text, .btn, .nav-link { font-family: "Barlow", sans-serif !important; font-weight: 500 !important; }
+        h1, h2, h3, h4, h5, h6, .navbar-brand, .card-title, .display-1, .display-2, .display-3, .display-4, .display-5, .display-6 { font-family: "Righteous", sans-serif !important; }
+        /* Giữ font mặc định cho icons - Enhanced */
+        .fas, .far, .fal, .fab, [class*="fa-"], 
+        i.fas, i.far, i.fal, i.fab, i[class*="fa-"],
+        .footer .fas, .footer .far, .footer .fal, .footer .fab, .footer [class*="fa-"],
+        .social-links i, .social-links [class*="fa-"] { 
+            font-family: "Font Awesome 6 Free", "Font Awesome 6 Pro", "Font Awesome 6 Brands" !important; 
+            font-weight: 900 !important;
+        }
+    </style>
 </head>
 <body>
     <!-- Navigation -->
@@ -225,7 +241,7 @@ $categories = getAllCategories();
                     $has_discount = $product['manual_discount'] > 0;
                     ?>
                     <div class="col-lg-3 col-md-4 col-sm-6">
-                        <div class="product-card card h-100 border-0 shadow-sm">
+                        <div class="product-card card h-100 shadow-sm">
                             <?php if ($has_discount): ?>
                                 <div class="discount-badge">-<?php echo number_format($product['manual_discount']); ?>%</div>
                             <?php endif; ?>
@@ -317,6 +333,11 @@ $categories = getAllCategories();
         </div>
     </footer>
 
+    <!-- Back to Top Button -->
+    <button id="backToTopBtn" class="back-to-top">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
     <script src="../../config/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
     <script src="../../Js/User/home.js"></script>
     <script>
@@ -343,6 +364,26 @@ $categories = getAllCategories();
             if (e.key === 'cart') {
                 updateCartCount();
             }
+        });
+
+        // Back to Top functionality
+        const backToTopBtn = document.getElementById('backToTopBtn');
+        
+        window.addEventListener('scroll', function() {
+            if (window.pageYOffset > 300) {
+                backToTopBtn.style.opacity = '1';
+                backToTopBtn.style.visibility = 'visible';
+            } else {
+                backToTopBtn.style.opacity = '0';
+                backToTopBtn.style.visibility = 'hidden';
+            }
+        });
+        
+        backToTopBtn.addEventListener('click', function() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
         });
     </script>
 </body>

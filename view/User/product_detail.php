@@ -99,15 +99,9 @@ if (!empty($detail_images)) {
 
 // Fallback to main product image if no detail images found
 if (empty($detail_images)) {
-    // Also use absolute path for fallback
-    $detail_images[] = "/Web_TMDT/Images/product/" . $product['image'];
+    // Use the getProductImagePath function for consistent path resolution
+    $detail_images[] = getProductImagePath($product_id, "placeholder.jpg");
 }
-
-// Debug output
-echo "<!-- DEBUG: Loaded " . count($detail_images) . " images for product $product_id -->";
-echo "<!-- DEBUG: Folder path: " . $image_folder_filesystem . " -->";
-echo "<!-- DEBUG: Folder exists: " . (is_dir($image_folder_filesystem) ? 'YES' : 'NO') . " -->";
-echo "<!-- DEBUG: Image URLs: " . implode(", ", $detail_images) . " -->";
 
 // ==================================================
 // BANNER MAPPING - CATEGORY BASED (ABSOLUTE PATH)
@@ -134,11 +128,6 @@ if (!file_exists($banner_path_filesystem)) {
 
 // Use absolute URL
 $banner_image_url = "/Web_TMDT/Images/baner/" . $banner_filename;
-
-// Debug output
-echo "<!-- DEBUG BANNER: Product ID: {$product['product_id']}, Category ID: $category_id, Banner: $banner_filename -->";
-echo "<!-- DEBUG BANNER: Banner URL: $banner_image_url -->";
-echo "<!-- DEBUG BANNER: Banner file exists: " . (file_exists($banner_path_filesystem) ? 'YES' : 'NO') . " -->";
 
 // Kiểm tra category để hiển thị size selector
 // Category 4 = Snowboards, Category 5 = Boots (Giày), Category 6 = Accessories (không cần size)
@@ -169,14 +158,31 @@ $discount_amount = $product['price'] - $final_price;
     <meta property="og:image" content="<?= htmlspecialchars($detail_images[0]) ?>">
     <meta property="og:type" content="product">
     
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Righteous&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+    
     <!-- Stylesheets -->
     <link rel="stylesheet" href="/Web_TMDT/config/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="/Web_TMDT/Css/User/product_detail.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Righteous&display=swap" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="/Web_TMDT/Images/logo/logo.jpg">
+    
+    <!-- Font override để đảm bảo fonts và icons hoạt động -->
+    <style>
+        body, p, div, span, a, button, input, select, textarea, .card-text, .btn, .nav-link { font-family: "Barlow", sans-serif !important; font-weight: 500 !important; }
+        h1, h2, h3, h4, h5, h6, .navbar-brand, .card-title, .product-title { font-family: "Righteous", sans-serif !important; }
+        /* Giữ font mặc định cho icons */
+        /* Giữ font mặc định cho icons - Enhanced */
+        .fas, .far, .fal, .fab, [class*="fa-"], 
+        i.fas, i.far, i.fal, i.fab, i[class*="fa-"],
+        .footer .fas, .footer .far, .footer .fal, .footer .fab, .footer [class*="fa-"],
+        .social-links i, .social-links [class*="fa-"] { 
+            font-family: "Font Awesome 6 Free", "Font Awesome 6 Pro", "Font Awesome 6 Brands" !important; 
+            font-weight: 900 !important;
+        }
+    </style>
 </head>
 <body>
     <!-- Navigation -->
@@ -346,7 +352,7 @@ $discount_amount = $product['price'] - $final_price;
                                 // Xác định size options dựa trên category
                                 if ($is_shoe) {
                                     // Giày trượt tuyết - size EU
-                                    $sizes = ['38', '39', '40', '41', '42', '43', '44', '45', '46'];
+                                    $sizes = ['34', '35', '36','37','38', '39', '40', '41', '42', '43', '44'];
                                 } else {
                                     // Snowboards - size theo chiều rộng
                                     $sizes = ['157(Wide)', '161(Wide)', '163(Ultra-Wide)'];
@@ -568,11 +574,27 @@ $discount_amount = $product['price'] - $final_price;
     <script src="/Web_TMDT/config/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Product data
+        <?php
+        // Create proper image path for cart
+        function getProductImagePath($productId, $defaultImage) {
+            $folderPath = __DIR__ . "/../../Images/product/Sp{$productId}/";
+            if (is_dir($folderPath)) {
+                $files = scandir($folderPath);
+                foreach ($files as $file) {
+                    if (preg_match('/\.(jpg|jpeg|png|gif)$/i', $file)) {
+                        return "/Web_TMDT/Images/product/Sp{$productId}/{$file}";
+                    }
+                }
+            }
+            return "/Web_TMDT/Images/product/{$defaultImage}";
+        }
+        $productImagePath = getProductImagePath($product_id, $product['image']);
+        ?>
         const productData = {
             id: <?= $product_id ?>,
             name: <?= json_encode($product['name']) ?>,
             price: <?= $final_price ?>,
-            image: <?= json_encode($product['image']) ?>,
+            image: <?= json_encode($productImagePath) ?>,
             stock: <?= $product['stock'] ?>,
             isShoe: <?= $is_shoe ? 'true' : 'false' ?>,
             needsSize: <?= $needs_size_selector ? 'true' : 'false' ?>,

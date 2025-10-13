@@ -15,7 +15,7 @@ if (!isset($_SESSION['user_id']) && isset($_COOKIE['remember_token'])) {
 
 // Chuyển hướng dựa trên vai trò
 if (isset($_SESSION['user_id']) && $_SESSION['role'] == 'admin') {
-    // Admin → Admin panel
+    // Admin → Admin 
     header('Location: view/Admin/admin_home.php');
     exit();
 } else {

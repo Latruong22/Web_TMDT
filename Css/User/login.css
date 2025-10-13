@@ -1,4 +1,4 @@
-/* ========== LOGIN PAGE STYLES ========== */
+/*  LOGIN PAGE STYLES  */
 :root {
   --primary-dark: #000000;
   --primary-white: #ffffff;
@@ -27,7 +27,7 @@ body {
   background: white;
 }
 
-/* ========== BRAND SIDE ========== */
+/*  BRAND SID */
 .brand-side {
   position: relative;
   background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%);

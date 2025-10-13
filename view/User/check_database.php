@@ -1,7 +1,8 @@
 <?php
 require_once '../../model/database.php';
 
-$conn = getDatabaseConnection();
+// Use global $conn instead of getDatabaseConnection()
+global $conn;
 
 // Get all products with category info
 $query = "SELECT p.product_id, p.name, p.category_id, c.category_name, p.image 
