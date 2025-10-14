@@ -28,10 +28,14 @@ function getOrders(array $filters = []) {
     }
 
     if (!empty($filters['search'])) {
+        // Strip # character if present (e.g., "#5" becomes "5")
+        $searchTerm = $filters['search'];
+        $orderIdSearch = (int) str_replace('#', '', $searchTerm);
+        
         $sql .= " AND (o.order_id = ? OR u.fullname LIKE ? OR u.email LIKE ?)";
         $types .= 'iss';
-        $params[] = (int) $filters['search'];
-        $likeTerm = '%' . $filters['search'] . '%';
+        $params[] = $orderIdSearch;
+        $likeTerm = '%' . $searchTerm . '%';
         $params[] = $likeTerm;
         $params[] = $likeTerm;
     }

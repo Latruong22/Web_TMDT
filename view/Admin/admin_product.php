@@ -5,8 +5,24 @@ checkAccess('admin');
 require_once '../../model/product_model.php';
 require_once '../../model/category_model.php';
 
-$products = getAllProducts();
+// Get filter parameters
+$filter_category = $_GET['category'] ?? 'all';
+$filter_status = $_GET['status'] ?? 'all';
+$filter_search = trim($_GET['search'] ?? '');
+$filter_price_min = $_GET['price_min'] ?? '';
+$filter_price_max = $_GET['price_max'] ?? '';
+
+$filters = [
+    'category' => $filter_category,
+    'status' => $filter_status,
+    'search' => $filter_search,
+    'price_min' => $filter_price_min,
+    'price_max' => $filter_price_max,
+];
+
+$products = getAdminProducts($filters);
 $categories = getAllCategories();
+$stats = getProductStats();
 
 $action = $_GET['action'] ?? '';
 $edit_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
@@ -140,6 +156,128 @@ function truncateText($text, $limit = 120) {
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 <?php endif; ?>
+
+                <!-- Statistics Cards -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4 col-lg">
+                        <div class="card text-center border-primary">
+                            <div class="card-body">
+                                <h6 class="text-muted">Tổng sản phẩm</h6>
+                                <h3 class="mb-0 text-primary"><?php echo number_format($stats['total_products'] ?? 0); ?></h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-lg">
+                        <div class="card text-center border-success">
+                            <div class="card-body">
+                                <h6 class="text-muted">Đang bán</h6>
+                                <h3 class="mb-0 text-success"><?php echo number_format($stats['active_products'] ?? 0); ?></h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-lg">
+                        <div class="card text-center border-danger">
+                            <div class="card-body">
+                                <h6 class="text-muted">Ngừng bán</h6>
+                                <h3 class="mb-0 text-danger"><?php echo number_format($stats['inactive_products'] ?? 0); ?></h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-lg">
+                        <div class="card text-center border-info">
+                            <div class="card-body">
+                                <h6 class="text-muted">Còn hàng</h6>
+                                <h3 class="mb-0 text-info"><?php echo number_format($stats['in_stock_products'] ?? 0); ?></h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-lg">
+                        <div class="card text-center border-warning">
+                            <div class="card-body">
+                                <h6 class="text-muted">Hết hàng</h6>
+                                <h3 class="mb-0 text-warning"><?php echo number_format($stats['out_of_stock_products'] ?? 0); ?></h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modern Filter Panel -->
+                <div class="filter-panel mb-4">
+                    <div class="filter-header" onclick="productFilterManager.toggleFilterPanel()">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-filter me-2"></i>
+                            <h5 class="mb-0">Bộ lọc sản phẩm</h5>
+                            <span id="filterBadge" class="filter-badge ms-2">0</span>
+                        </div>
+                        <i class="fas fa-chevron-down" id="filterToggleIcon"></i>
+                    </div>
+                    <div class="filter-body" id="filterBody">
+                        <div id="activeFilters" class="active-filters mb-3"></div>
+                        <form method="get" id="productFilterForm" class="row g-3">
+                            <div class="col-md-2">
+                                <label class="form-label">
+                                    <i class="fas fa-folder me-1"></i>
+                                    Danh mục
+                                </label>
+                                <select name="category" class="form-select filter-select">
+                                    <option value="all" <?php echo $filter_category === 'all' ? 'selected' : ''; ?>>Tất cả danh mục</option>
+                                    <?php foreach ($categories as $cat): ?>
+                                        <option value="<?php echo (int)$cat['category_id']; ?>" <?php echo $filter_category == $cat['category_id'] ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($cat['name']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Trạng thái
+                                </label>
+                                <select name="status" class="form-select filter-select">
+                                    <option value="all" <?php echo $filter_status === 'all' ? 'selected' : ''; ?>>Tất cả</option>
+                                    <option value="active" <?php echo $filter_status === 'active' ? 'selected' : ''; ?>>Đang bán</option>
+                                    <option value="inactive" <?php echo $filter_status === 'inactive' ? 'selected' : ''; ?>>Ngừng bán</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">
+                                    <i class="fas fa-search me-1"></i>
+                                    Tìm kiếm
+                                </label>
+                                <div class="input-group">
+                                    <input type="text" name="search" id="searchInput" class="form-control" placeholder="Tên sản phẩm..." value="<?php echo htmlspecialchars($filter_search); ?>">
+                                    <span class="input-group-text" id="searchSpinner" style="display: none;">
+                                        <i class="fas fa-spinner fa-spin"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">
+                                    <i class="fas fa-dollar-sign me-1"></i>
+                                    Giá từ
+                                </label>
+                                <input type="number" name="price_min" class="form-control filter-price" placeholder="0" min="0" step="1000" value="<?php echo htmlspecialchars($filter_price_min); ?>">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">
+                                    <i class="fas fa-dollar-sign me-1"></i>
+                                    Giá đến
+                                </label>
+                                <input type="number" name="price_max" class="form-control filter-price" placeholder="999999999" min="0" step="1000" value="<?php echo htmlspecialchars($filter_price_max); ?>">
+                            </div>
+                            <div class="col-md-1 d-flex align-items-end">
+                                <button type="button" class="btn btn-outline-secondary w-100" onclick="productFilterManager.clearAllFilters()" title="Xóa tất cả bộ lọc">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </form>
+                        <div class="filter-loading" id="filterLoading" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Đang tải...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <section class="form-section card mb-4">
                     <div class="card-header d-flex justify-content-between align-items-center">

@@ -283,3 +283,179 @@ td {
     flex-wrap: wrap;
   }
 }
+
+/* ========== MODERN FILTER PANEL STYLES ========== */
+.filter-panel {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.filter-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 15px 20px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  user-select: none;
+  transition: all 0.3s ease;
+}
+
+.filter-header:hover {
+  background: linear-gradient(135deg, #5568d3 0%, #63408b 100%);
+}
+
+.filter-header h5 {
+  margin: 0;
+  font-weight: 600;
+}
+
+.filter-header i {
+  transition: transform 0.3s ease;
+}
+
+.filter-header.collapsed i#filterToggleIcon {
+  transform: rotate(-90deg);
+}
+
+.filter-badge {
+  background: rgba(255, 255, 255, 0.3);
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: bold;
+  min-width: 24px;
+  text-align: center;
+  display: inline-block;
+}
+
+.filter-body {
+  padding: 20px;
+  max-height: 500px;
+  opacity: 1;
+  transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.3s ease;
+  overflow: visible;
+  position: relative;
+}
+
+.filter-body.collapsed {
+  max-height: 0;
+  padding: 0 20px;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 0;
+  animation: slideDown 0.3s ease;
+}
+
+.filter-chip {
+  background: white;
+  border: 1px solid #667eea;
+  color: #667eea;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  animation: chipIn 0.3s ease;
+  transition: all 0.2s ease;
+}
+
+.filter-chip:hover {
+  background: #667eea;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.filter-chip .remove-chip {
+  cursor: pointer;
+  font-weight: bold;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.filter-chip .remove-chip:hover {
+  opacity: 1;
+}
+
+.filter-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(2px);
+  z-index: 10;
+}
+
+.form-label i {
+  color: #667eea;
+  font-size: 14px;
+}
+
+.input-group-text {
+  background: white;
+  border-left: none;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes chipIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (max-width: 768px) {
+  .filter-body {
+    padding: 15px;
+  }
+
+  .filter-chip {
+    font-size: 12px;
+    padding: 5px 10px;
+  }
+
+  .filter-header {
+    padding: 12px 15px;
+  }
+
+  .form-label {
+    font-size: 13px;
+  }
+}

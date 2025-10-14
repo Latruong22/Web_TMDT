@@ -210,36 +210,69 @@ $statuses = [
                 		</form>
                 	</section>
 
-                	<section class="filter-section">
-                		<form method="get" class="filter-form">
-                			<label>
-                				Trạng thái
-                				<select name="status">
-                					<?php foreach ($statuses as $value => $label): ?>
-                						<option value="<?php echo $value; ?>" <?php echo $filter_status === $value ? 'selected' : ''; ?>><?php echo $label; ?></option>
-                					<?php endforeach; ?>
-                				</select>
-                			</label>
-                			<label>
-                				Từ khóa
-                				<input type="text" name="search" placeholder="Mã hoặc loại" value="<?php echo htmlspecialchars($filter_search); ?>">
-                			</label>
-                			<label>
-                				Từ ngày
-                				<input type="date" name="from" value="<?php echo htmlspecialchars($filter_from); ?>">
-                			</label>
-                			<label>
-                				Đến ngày
-                				<input type="date" name="to" value="<?php echo htmlspecialchars($filter_to); ?>">
-                			</label>
-                			<div class="filter-actions">
-                				<button type="submit" class="btn-primary">Lọc</button>
-                				<a class="btn-secondary" href="admin_promotion.php">Làm mới</a>
-                			</div>
-                		</form>
-                	</section>
-
-                	<section class="table-section">
+            	<!-- Modern Filter Panel -->
+            	<div class="filter-panel mb-4">
+            		<div class="filter-header" onclick="promotionFilterManager.toggleFilterPanel()">
+            			<div class="d-flex align-items-center">
+            				<i class="fas fa-filter me-2"></i>
+            				<h5 class="mb-0">Bộ lọc voucher</h5>
+            				<span id="filterBadge" class="filter-badge ms-2">0</span>
+            			</div>
+            			<i class="fas fa-chevron-down" id="filterToggleIcon"></i>
+            		</div>
+            		<div class="filter-body" id="filterBody">
+            			<div id="activeFilters" class="active-filters mb-3"></div>
+            			<form method="get" id="promotionFilterForm" class="row g-3">
+            				<div class="col-md-2">
+            					<label class="form-label">
+            						<i class="fas fa-info-circle me-1"></i>
+            						Trạng thái
+            					</label>
+            					<select name="status" class="form-select filter-select">
+            						<?php foreach ($statuses as $value => $label): ?>
+            							<option value="<?php echo $value; ?>" <?php echo $filter_status === $value ? 'selected' : ''; ?>><?php echo $label; ?></option>
+            						<?php endforeach; ?>
+            					</select>
+            				</div>
+            				<div class="col-md-3">
+            					<label class="form-label">
+            						<i class="fas fa-search me-1"></i>
+            						Từ khóa
+            					</label>
+            					<div class="input-group">
+            						<input type="text" name="search" id="searchInput" class="form-control" placeholder="Mã hoặc loại..." value="<?php echo htmlspecialchars($filter_search); ?>">
+            						<span class="input-group-text" id="searchSpinner" style="display: none;">
+            							<i class="fas fa-spinner fa-spin"></i>
+            						</span>
+            					</div>
+            				</div>
+            				<div class="col-md-3">
+            					<label class="form-label">
+            						<i class="fas fa-calendar-alt me-1"></i>
+            						Từ ngày
+            					</label>
+            					<input type="date" name="from" class="form-control filter-date" value="<?php echo htmlspecialchars($filter_from); ?>">
+            				</div>
+            				<div class="col-md-3">
+            					<label class="form-label">
+            						<i class="fas fa-calendar-alt me-1"></i>
+            						Đến ngày
+            					</label>
+            					<input type="date" name="to" class="form-control filter-date" value="<?php echo htmlspecialchars($filter_to); ?>">
+            				</div>
+            				<div class="col-md-1 d-flex align-items-end">
+            					<button type="button" class="btn btn-outline-secondary w-100" onclick="promotionFilterManager.clearAllFilters()" title="Xóa tất cả bộ lọc">
+            						<i class="fas fa-times"></i>
+            					</button>
+            				</div>
+            			</form>
+            			<div class="filter-loading" id="filterLoading" style="display: none;">
+            				<div class="spinner-border text-primary" role="status">
+            					<span class="visually-hidden">Đang tải...</span>
+            				</div>
+            			</div>
+            		</div>
+            	</div>                	<section class="table-section">
                 		<div class="section-header">
                 			<h2>Danh sách voucher</h2>
                 			<span><?php echo count($vouchers); ?> voucher</span>

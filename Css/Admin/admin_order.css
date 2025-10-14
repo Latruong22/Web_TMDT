@@ -309,6 +309,253 @@ tbody td {
   font-weight: 700;
 }
 
+/* ========================================
+   MODERN FILTER PANEL STYLES
+   ======================================== */
+.filter-panel {
+  border: 1px solid #dee2e6;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.filter-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1rem 1.25rem;
+  border-bottom: none;
+}
+
+.filter-header h5 {
+  color: white;
+  margin: 0;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+.filter-header .btn-link {
+  color: white;
+  text-decoration: none;
+  padding: 0.25rem 0.5rem;
+  transition: transform 0.3s ease;
+  opacity: 0.9;
+}
+
+.filter-header .btn-link:hover {
+  transform: scale(1.1);
+  opacity: 1;
+}
+
+.filter-header .btn-link i {
+  transition: transform 0.3s ease;
+}
+
+.filter-body {
+  max-height: 500px;
+  overflow: hidden;
+  transition: max-height 0.4s ease, padding 0.4s ease, opacity 0.3s ease;
+  opacity: 1;
+}
+
+.filter-body.collapsed {
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  opacity: 0;
+}
+
+/* Active Filter Chips */
+.active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-radius: 8px;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem 0.75rem;
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  color: #495057;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  animation: chipIn 0.3s ease;
+  transition: all 0.2s ease;
+}
+
+.filter-chip:hover {
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+@keyframes chipIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.filter-chip .btn-close {
+  margin-left: 0.5rem;
+  font-size: 0.65rem;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.filter-chip .btn-close:hover {
+  opacity: 1;
+}
+
+.filter-chip strong {
+  color: #667eea;
+  margin-right: 0.25rem;
+}
+
+/* Filter Form Enhancements */
+.filter-body .form-label {
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.filter-body .form-label i {
+  color: #6c757d;
+  font-size: 0.85rem;
+}
+
+.filter-body .form-control,
+.filter-body .form-select {
+  border-radius: 8px;
+  border: 1px solid #ced4da;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.filter-body .form-control:focus,
+.filter-body .form-select:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.filter-body .input-group-text {
+  border-left: none;
+  border-radius: 0 8px 8px 0;
+}
+
+.filter-body .filter-search {
+  border-right: none;
+  border-radius: 8px 0 0 8px;
+}
+
+/* Loading Overlay */
+.filter-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  border-radius: 10px;
+  backdrop-filter: blur(2px);
+}
+
+.filter-loading p {
+  margin: 0;
+  color: #6c757d;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+/* Search Spinner */
+#searchSpinner {
+  width: 1rem;
+  height: 1rem;
+}
+
+#searchIcon {
+  display: block;
+}
+
+/* Button Enhancements */
+#applyFilters {
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+#applyFilters:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+#applyFilters:active {
+  transform: translateY(0);
+}
+
+/* Badge Styling */
+#activeFilterCount {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  animation: bounce 0.5s ease;
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+}
+
+/* Clear All Button in Chips */
+.active-filters .btn-outline-danger {
+  font-size: 0.875rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 20px;
+  transition: all 0.2s ease;
+}
+
+.active-filters .btn-outline-danger:hover {
+  background: #dc3545;
+  color: white;
+  transform: scale(1.05);
+}
+
 @media (max-width: 768px) {
   .actions {
     text-align: left;
@@ -321,5 +568,22 @@ tbody td {
 
   .order-update-form button {
     width: 100%;
+  }
+
+  .filter-body {
+    padding: 1rem;
+  }
+
+  .filter-body .row {
+    gap: 1rem;
+  }
+
+  .filter-chip {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.6rem;
+  }
+
+  .active-filters {
+    padding: 0.5rem;
   }
 }

@@ -318,6 +318,10 @@
   color: #dc3545;
 }
 
+.promo-message.info {
+  color: #17a2b8;
+}
+
 /* Affirm Info */
 .affirm-info {
   font-size: 0.875rem;

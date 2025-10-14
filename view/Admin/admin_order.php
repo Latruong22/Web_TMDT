@@ -155,42 +155,88 @@ $alert_text = $message_map[$msg] ?? '';
                     <?php endforeach; ?>
                 </div>
 
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0">Bộ lọc</h5>
+                <!-- Modern Filter Panel -->
+                <div class="card mb-4 filter-panel" id="filterPanel">
+                    <div class="card-header filter-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-filter me-2"></i>Bộ lọc
+                                <span class="badge bg-primary ms-2" id="activeFilterCount" style="display: none;">0</span>
+                            </h5>
+                            <button type="button" class="btn btn-sm btn-link text-white" id="toggleFilters">
+                                <i class="fas fa-chevron-up"></i>
+                            </button>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <form method="get" class="row g-3">
-                            <div class="col-md-3">
-                                <label class="form-label">Trạng thái</label>
-                                <select name="status" class="form-select">
+                    
+                    <div class="card-body filter-body" id="filterBody">
+                        <!-- Active Filter Chips -->
+                        <div class="active-filters mb-3" id="activeFilters" style="display: none;">
+                            <!-- Chips will be inserted here by JavaScript -->
+                        </div>
+                        
+                        <!-- Filter Form -->
+                        <form method="get" id="orderFilterForm" class="row g-3">
+                            <div class="col-lg-3 col-md-4">
+                                <label class="form-label">
+                                    <i class="fas fa-info-circle me-1"></i>Trạng thái
+                                </label>
+                                <select name="status" class="form-select filter-select">
                                     <option value="all" <?php echo $filter_status === 'all' ? 'selected' : ''; ?>>Tất cả</option>
                                     <?php foreach ($statuses as $value => $label): ?>
                                         <option value="<?php echo $value; ?>" <?php echo $filter_status === $value ? 'selected' : ''; ?>><?php echo $label; ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Tìm kiếm</label>
-                                <input type="text" name="search" class="form-control" placeholder="Mã đơn, tên hoặc email" value="<?php echo htmlspecialchars($filter_search); ?>">
+                            
+                            <div class="col-lg-4 col-md-6">
+                                <label class="form-label">
+                                    <i class="fas fa-search me-1"></i>Tìm kiếm
+                                </label>
+                                <div class="input-group">
+                                    <input type="text" name="search" class="form-control filter-search" 
+                                           placeholder="Mã đơn, tên hoặc email..." 
+                                           value="<?php echo htmlspecialchars($filter_search); ?>">
+                                    <span class="input-group-text bg-white">
+                                        <div class="spinner-border spinner-border-sm text-primary" role="status" 
+                                             id="searchSpinner" style="display: none;">
+                                            <span class="visually-hidden">Đang tìm...</span>
+                                        </div>
+                                        <i class="fas fa-search text-muted" id="searchIcon"></i>
+                                    </span>
+                                </div>
                             </div>
-                            <div class="col-md-2">
-                                <label class="form-label">Từ ngày</label>
-                                <input type="date" name="from" class="form-control" value="<?php echo htmlspecialchars($filter_from); ?>">
+                            
+                            <div class="col-lg-2 col-md-3">
+                                <label class="form-label">
+                                    <i class="fas fa-calendar-alt me-1"></i>Từ ngày
+                                </label>
+                                <input type="date" name="from" class="form-control filter-date" 
+                                       value="<?php echo htmlspecialchars($filter_from); ?>">
                             </div>
-                            <div class="col-md-2">
-                                <label class="form-label">Đến ngày</label>
-                                <input type="date" name="to" class="form-control" value="<?php echo htmlspecialchars($filter_to); ?>">
+                            
+                            <div class="col-lg-2 col-md-3">
+                                <label class="form-label">
+                                    <i class="fas fa-calendar-alt me-1"></i>Đến ngày
+                                </label>
+                                <input type="date" name="to" class="form-control filter-date" 
+                                       value="<?php echo htmlspecialchars($filter_to); ?>">
                             </div>
-                            <div class="col-md-2 d-flex align-items-end">
-                                <button type="submit" class="btn btn-primary me-2">
-                                    <i class="fas fa-filter me-1"></i>Lọc
+                            
+                            <div class="col-lg-1 col-md-2 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary w-100" id="applyFilters" title="Áp dụng bộ lọc">
+                                    <i class="fas fa-check"></i>
                                 </button>
-                                <a class="btn btn-secondary" href="admin_order.php">
-                                    <i class="fas fa-redo me-1"></i>Làm mới
-                                </a>
                             </div>
                         </form>
+                    </div>
+                    
+                    <!-- Loading Overlay -->
+                    <div class="filter-loading" id="filterLoading" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Đang lọc...</span>
+                        </div>
+                        <p class="mt-2 mb-0">Đang lọc dữ liệu...</p>
                     </div>
                 </div>
 

@@ -197,13 +197,8 @@ if (isset($_SESSION['user_id'])) {
                             </div>
                             
                             <div class="summary-row">
-                                <span>Vận chuyển</span>
+                                <span>Phí vận chuyển</span>
                                 <span id="shipping">₫0.00</span>
-                            </div>
-                            
-                            <div class="summary-row">
-                                <span>Thuế bán hàng</span>
-                                <span id="salesTax">₫0.00</span>
                             </div>
                             
                             <div class="summary-row" id="discountRow" style="display: none;">

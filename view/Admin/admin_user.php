@@ -190,51 +190,80 @@ if ($recentReset && (time() - $recentReset['timestamp'] > 300)) {
 					</div>
 				</div>
 
-				<div class="card mb-4">
-					<div class="card-header">
-						<h5 class="mb-0">Bộ lọc</h5>
+			<div class="filter-panel mb-4">
+				<div class="filter-header" onclick="userFilterManager.toggleFilterPanel()">
+					<div class="d-flex align-items-center">
+						<i class="fas fa-filter me-2"></i>
+						<h5 class="mb-0">Bộ lọc người dùng</h5>
+						<span id="filterBadge" class="filter-badge ms-2">0</span>
 					</div>
-					<div class="card-body">
-						<form method="get" class="row g-3">
-							<div class="col-md-2">
-								<label class="form-label">Trạng thái</label>
-								<select name="status" class="form-select">
-									<option value="all" <?php echo $filter_status === 'all' ? 'selected' : ''; ?>>Tất cả</option>
-									<option value="active" <?php echo $filter_status === 'active' ? 'selected' : ''; ?>>Đang hoạt động</option>
-									<option value="pending" <?php echo $filter_status === 'pending' ? 'selected' : ''; ?>>Chờ kích hoạt</option>
-									<option value="locked" <?php echo $filter_status === 'locked' ? 'selected' : ''; ?>>Đang bị khóa</option>
-								</select>
-							</div>    
-							<div class="col-md-2">
-								<label class="form-label">Vai trò</label>
-								<select name="role" class="form-select">
-									<option value="all" <?php echo $filter_role === 'all' ? 'selected' : ''; ?>>Tất cả</option>
-									<option value="user" <?php echo $filter_role === 'user' ? 'selected' : ''; ?>>Khách hàng</option>
-									<option value="admin" <?php echo $filter_role === 'admin' ? 'selected' : ''; ?>>Quản trị</option>
-								</select>
+					<i class="fas fa-chevron-down" id="filterToggleIcon"></i>
+				</div>
+				<div class="filter-body" id="filterBody">
+					<div id="activeFilters" class="active-filters mb-3"></div>
+					<form method="get" id="userFilterForm" class="row g-3">
+						<div class="col-md-2">
+							<label class="form-label">
+								<i class="fas fa-info-circle me-1"></i>
+								Trạng thái
+							</label>
+							<select name="status" class="form-select filter-select">
+								<option value="all" <?php echo $filter_status === 'all' ? 'selected' : ''; ?>>Tất cả</option>
+								<option value="active" <?php echo $filter_status === 'active' ? 'selected' : ''; ?>>Đang hoạt động</option>
+								<option value="pending" <?php echo $filter_status === 'pending' ? 'selected' : ''; ?>>Chờ kích hoạt</option>
+								<option value="locked" <?php echo $filter_status === 'locked' ? 'selected' : ''; ?>>Đang bị khóa</option>
+							</select>
+						</div>    
+						<div class="col-md-2">
+							<label class="form-label">
+								<i class="fas fa-user-shield me-1"></i>
+								Vai trò
+							</label>
+							<select name="role" class="form-select filter-select">
+								<option value="all" <?php echo $filter_role === 'all' ? 'selected' : ''; ?>>Tất cả</option>
+								<option value="user" <?php echo $filter_role === 'user' ? 'selected' : ''; ?>>Khách hàng</option>
+								<option value="admin" <?php echo $filter_role === 'admin' ? 'selected' : ''; ?>>Quản trị</option>
+							</select>
+						</div>
+						<div class="col-md-3">
+							<label class="form-label">
+								<i class="fas fa-search me-1"></i>
+								Từ khóa
+							</label>
+							<div class="input-group">
+								<input type="text" name="search" id="searchInput" class="form-control" placeholder="Tên, email hoặc SĐT" value="<?php echo htmlspecialchars($filter_search); ?>">
+								<span class="input-group-text" id="searchSpinner" style="display: none;">
+									<i class="fas fa-spinner fa-spin"></i>
+								</span>
 							</div>
-							<div class="col-md-3">
-								<label class="form-label">Từ khóa</label>
-								<input type="text" name="search" class="form-control" placeholder="Tên, email hoặc SĐT" value="<?php echo htmlspecialchars($filter_search); ?>">
-							</div>
-							<div class="col-md-2">
-								<label class="form-label">Từ ngày</label>
-								<input type="date" name="from" class="form-control" value="<?php echo htmlspecialchars($filter_from); ?>">
-							</div>
-							<div class="col-md-2">
-								<label class="form-label">Đến ngày</label>
-								<input type="date" name="to" class="form-control" value="<?php echo htmlspecialchars($filter_to); ?>">
-							</div>
-							<div class="col-md-1 d-flex align-items-end">
-								<button type="submit" class="btn btn-primary w-100">
-									<i class="fas fa-filter"></i>
-								</button>
-							</div>
-						</form>
+						</div>
+						<div class="col-md-2">
+							<label class="form-label">
+								<i class="fas fa-calendar-alt me-1"></i>
+								Từ ngày
+							</label>
+							<input type="date" name="from" class="form-control filter-date" value="<?php echo htmlspecialchars($filter_from); ?>">
+						</div>
+						<div class="col-md-2">
+							<label class="form-label">
+								<i class="fas fa-calendar-alt me-1"></i>
+								Đến ngày
+							</label>
+							<input type="date" name="to" class="form-control filter-date" value="<?php echo htmlspecialchars($filter_to); ?>">
+						</div>
+						<div class="col-md-1 d-flex align-items-end">
+							<button type="button" class="btn btn-outline-secondary w-100" onclick="userFilterManager.clearAllFilters()" title="Xóa tất cả bộ lọc">
+								<i class="fas fa-times"></i>
+							</button>
+						</div>
+					</form>
+					<div class="filter-loading" id="filterLoading" style="display: none;">
+						<div class="spinner-border text-primary" role="status">
+							<span class="visually-hidden">Đang tải...</span>
+						</div>
 					</div>
 				</div>
-
-				<div class="card">
+			</div>				<div class="card">
 					<div class="card-header d-flex justify-content-between align-items-center">
 						<h5 class="mb-0">Danh sách người dùng</h5>
 						<span class="badge bg-primary"><?php echo count($users); ?> tài khoản</span>

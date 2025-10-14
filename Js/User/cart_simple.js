@@ -16,11 +16,46 @@ function initializeCart() {
   const cart = getCartFromStorage();
   console.log("🚀 Initializing cart with", cart.length, "items:", cart);
 
+  // Load voucher từ localStorage nếu có
+  loadVoucherFromStorage();
+
   displayCartItems(cart);
   updateOrderSummary(cart);
   toggleCartSections(cart.length > 0);
 
   console.log("✅ Cart initialization completed!");
+}
+
+function loadVoucherFromStorage() {
+  const savedVoucher = localStorage.getItem("appliedVoucher");
+  if (savedVoucher) {
+    try {
+      appliedVoucher = JSON.parse(savedVoucher);
+      console.log("✅ Voucher đã load từ localStorage:", appliedVoucher);
+
+      // Hiển thị voucher đã apply trong UI
+      const promoInput = document.getElementById("promoCode");
+      const promoMessage = document.getElementById("promoMessage");
+
+      if (promoInput) {
+        promoInput.value = appliedVoucher.code;
+      }
+
+      if (promoMessage) {
+        const discountText =
+          appliedVoucher.type === "percent"
+            ? `${appliedVoucher.discount}%`
+            : formatCurrency(appliedVoucher.discount);
+        promoMessage.textContent = `✓ Mã "${appliedVoucher.code}" đang được áp dụng (Giảm ${discountText})`;
+        promoMessage.className = "promo-message success";
+        promoMessage.style.display = "block";
+      }
+    } catch (error) {
+      console.error("❌ Lỗi khi load voucher:", error);
+      appliedVoucher = null;
+      localStorage.removeItem("appliedVoucher");
+    }
+  }
 }
 
 function getCartFromStorage() {
@@ -251,24 +286,24 @@ function updateCartCount() {
 // ORDER SUMMARY
 // ========================================
 
+// Biến global để lưu voucher đã apply
+let appliedVoucher = null;
+
 function updateOrderSummary(cart) {
   const subtotal = cart.reduce(
     (total, item) => total + item.price * item.quantity,
     0
   );
   const shipping = calculateShippingCost(subtotal);
-  const salesTax = calculateSalesTax(subtotal);
   const discount = getCurrentDiscount(subtotal);
-  const total = subtotal + shipping + salesTax - discount;
+  const total = subtotal + shipping - discount;
 
   const subtotalEl = document.getElementById("subtotal");
   const shippingEl = document.getElementById("shipping");
-  const salesTaxEl = document.getElementById("salesTax");
   const totalEl = document.getElementById("total");
 
   if (subtotalEl) subtotalEl.textContent = formatCurrency(subtotal);
   if (shippingEl) shippingEl.textContent = formatCurrency(shipping);
-  if (salesTaxEl) salesTaxEl.textContent = formatCurrency(salesTax);
   if (totalEl) totalEl.textContent = formatCurrency(total);
 
   // Show/hide discount row
@@ -283,15 +318,22 @@ function updateOrderSummary(cart) {
 }
 
 function calculateShippingCost(subtotal) {
-  return subtotal >= 2000000 ? 0 : 50000;
-}
-
-function calculateSalesTax(subtotal) {
-  return subtotal * 0.1;
+  // Phí vận chuyển cố định 30,000đ (đồng nhất với checkout)
+  return 30000;
 }
 
 function getCurrentDiscount(subtotal) {
-  // Placeholder for promo code functionality
+  if (!appliedVoucher) {
+    return 0;
+  }
+
+  // Tính discount dựa trên type
+  if (appliedVoucher.type === "percent") {
+    return (subtotal * appliedVoucher.discount) / 100;
+  } else if (appliedVoucher.type === "fixed") {
+    return appliedVoucher.discount;
+  }
+
   return 0;
 }
 
@@ -301,13 +343,104 @@ function getCurrentDiscount(subtotal) {
 
 function applyPromoCode() {
   const promoInput = document.getElementById("promoCode");
-  if (promoInput) {
-    const promoCode = promoInput.value.trim().toUpperCase();
-    if (promoCode) {
-      showToast("Tính năng mã giảm giá sẽ được phát triển!");
-    } else {
-      showToast("Vui lòng nhập mã giảm giá!");
-    }
+  const promoMessage = document.getElementById("promoMessage");
+  const applyBtn = document.querySelector('button[onclick="applyPromoCode()"]');
+
+  if (!promoInput) {
+    console.error("❌ Promo input not found");
+    return;
+  }
+
+  const promoCode = promoInput.value.trim();
+
+  if (!promoCode) {
+    showPromoMessage("Vui lòng nhập mã giảm giá!", "error");
+    return;
+  }
+
+  // Hiển thị loading
+  if (applyBtn) {
+    applyBtn.disabled = true;
+    applyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+  }
+  showPromoMessage("Đang kiểm tra...", "info");
+
+  // Gọi API validate voucher
+  fetch("../../controller/controller_User/voucher_controller.php", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: `action=validate_voucher&code=${encodeURIComponent(promoCode)}`,
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        // Lưu voucher đã apply
+        appliedVoucher = {
+          code: promoCode,
+          discount: data.discount,
+          type: data.type,
+        };
+
+        // LƯU VOUCHER VÀO LOCALSTORAGE để sử dụng ở trang checkout
+        localStorage.setItem("appliedVoucher", JSON.stringify(appliedVoucher));
+        console.log("✅ Voucher đã lưu vào localStorage:", appliedVoucher);
+
+        // Hiển thị message success
+        const discountText =
+          data.type === "percent"
+            ? `${data.discount}%`
+            : formatCurrency(data.discount);
+        showPromoMessage(
+          `✓ Áp dụng thành công! Giảm ${discountText}`,
+          "success"
+        );
+
+        // Tính lại totals
+        const cart = getCartFromStorage();
+        updateOrderSummary(cart);
+
+        // Auto-hide success message sau 5 giây
+        setTimeout(() => {
+          if (promoMessage) {
+            promoMessage.style.display = "none";
+          }
+        }, 5000);
+      } else {
+        // Reset voucher nếu không hợp lệ
+        appliedVoucher = null;
+
+        // XÓA VOUCHER KHỎI LOCALSTORAGE
+        localStorage.removeItem("appliedVoucher");
+        console.log("❌ Voucher đã xóa khỏi localStorage");
+
+        showPromoMessage(data.message || "Mã giảm giá không hợp lệ", "error");
+
+        // Tính lại totals không có discount
+        const cart = getCartFromStorage();
+        updateOrderSummary(cart);
+      }
+    })
+    .catch((error) => {
+      console.error("Lỗi khi kiểm tra voucher:", error);
+      appliedVoucher = null;
+      showPromoMessage("Có lỗi xảy ra. Vui lòng thử lại", "error");
+    })
+    .finally(() => {
+      if (applyBtn) {
+        applyBtn.disabled = false;
+        applyBtn.innerHTML = '<i class="fas fa-arrow-right"></i>';
+      }
+    });
+}
+
+function showPromoMessage(message, type) {
+  const promoMessage = document.getElementById("promoMessage");
+  if (promoMessage) {
+    promoMessage.textContent = message;
+    promoMessage.className = `promo-message ${type}`;
+    promoMessage.style.display = "block";
   }
 }
 
