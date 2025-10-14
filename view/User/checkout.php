@@ -86,7 +86,7 @@ if (!$user) {
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="profile.php"><i class="fas fa-user-edit me-2"></i>Hồ sơ</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="../../controller/controller_User/logout.php"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
+                            <li><a class="dropdown-item" href="../../controller/controller_User/controller.php?action=logout"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
                         </ul>
                     </li>
                 </ul>
@@ -233,7 +233,7 @@ if (!$user) {
                 </div>
             </div>
 
-            <!-- Right Column - Order Summary -->
+            <!-- Cột phải - Tổng kết đơn hàng -->
             <div class="col-lg-5">
                 <div class="card checkout-card order-summary-card sticky-top" style="top: 100px;">
                     <div class="card-body">
@@ -305,13 +305,13 @@ if (!$user) {
     </div>
 
     <!-- Footer -->
-    <footer class="footer bg-dark text-white pt-5 pb-3 mt-5">
+    <footer class="footer bg-dark text-white py-5">
         <div class="container">
-            <div class="row">
-                <div class="col-lg-4 col-md-12 mb-4">
-                    <h6 class="fw-bold mb-3">SNOWBOARD SHOP</h6>
-                    <p class="text-white-50">Chuyên cung cấp các sản phẩm snowboard chất lượng cao với giá tốt nhất.</p>
-                    <div class="social-links">
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <h5 class="fw-bold mb-3">SNOWBOARD SHOP</h5>
+                    <p class="text-white-50">Điểm đến lý tưởng cho những người đam mê trượt tuyết và thể thao mùa đông.</p>
+                    <div class="social-links mt-3">
                         <a href="#" class="text-white me-3"><i class="fab fa-facebook fa-lg"></i></a>
                         <a href="#" class="text-white me-3"><i class="fab fa-instagram fa-lg"></i></a>
                         <a href="#" class="text-white me-3"><i class="fab fa-twitter fa-lg"></i></a>

@@ -92,7 +92,7 @@ $categories = getAllCategories();
         </div>
     </nav>
 
-    <!-- Hero Banner Carousel -->
+    <!-- Băng chuyền Hero -->
     <section class="hero-section">
         <div id="heroCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel">
             <div class="carousel-indicators">
@@ -157,7 +157,7 @@ $categories = getAllCategories();
         </div>
     </section>
 
-    <!-- About Section -->
+    <!-- Phần giới thiệu -->
     <section class="about-section py-5">
         <div class="container">
             <div class="row align-items-center">
@@ -205,7 +205,7 @@ $categories = getAllCategories();
         </div>
     </section>
 
-    <!-- Categories Section -->
+    <!-- Phần danh mục -->
     <section class="categories-section py-5 bg-light">
         <div class="container">
             <h2 class="text-center display-5 fw-bold mb-5">Danh mục sản phẩm</h2>
@@ -227,7 +227,7 @@ $categories = getAllCategories();
         </div>
     </section>
 
-    <!-- Featured Products -->
+    <!-- Sản phẩm nổi bật -->
     <section class="products-section py-5">
         <div class="container">
             <div class="section-header text-center mb-5">
@@ -285,7 +285,7 @@ $categories = getAllCategories();
         </div>
     </section>
 
-    <!-- Footer -->
+    <!-- Chân trang -->
     <footer class="footer bg-dark text-white py-5">
         <div class="container">
             <div class="row g-4">
@@ -333,7 +333,7 @@ $categories = getAllCategories();
         </div>
     </footer>
 
-    <!-- Back to Top Button -->
+    <!-- Nút lên đầu trang -->
     <button id="backToTopBtn" class="back-to-top">
         <i class="fas fa-arrow-up"></i>
     </button>

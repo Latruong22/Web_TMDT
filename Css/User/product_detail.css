@@ -42,10 +42,10 @@ body {
 }
 
 .logo-img {
+  width: 40px;
   height: 40px;
-  width: auto;
-  object-fit: contain;
-  border-radius: 4px;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .navbar-brand {
@@ -209,7 +209,7 @@ body {
   transform: scale(1.1);
 }
 
-/* Zoom Lens Effect */
+/* Hiệu ứng kính phóng đại */
 .zoom-lens {
   position: absolute;
   border: 2px solid var(--accent-color);
@@ -226,7 +226,7 @@ body {
   opacity: 1;
 }
 
-/* Fullscreen Button */
+/* Nút xem toàn màn hình */
 .fullscreen-btn {
   position: absolute;
   top: 15px;
@@ -259,7 +259,7 @@ body {
   color: var(--text-dark);
 }
 
-/* Thumbnail Gallery */
+/* Bộ sưu tập ảnh thu nhỏ */
 .thumbnail-gallery {
   display: flex;
   gap: 12px;
@@ -1596,7 +1596,7 @@ span.current-price,
   line-height: 1.6;
 }
 
-/* ========== BACK TO TOP BUTTON ========== */
+/* ========== NÚT LÊN ĐẦU TRANG ========== */
 .back-to-top {
   position: fixed;
   bottom: 30px;
@@ -1628,7 +1628,7 @@ span.current-price,
   transform: scale(0.95);
 }
 
-/* ========== FOOTER ========== */
+/* ========== CHÂN TRANG ========== */
 .footer {
   margin-top: 80px;
 }

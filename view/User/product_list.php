@@ -226,7 +226,7 @@ $categories = getAllCategories();
         </div>
     </nav>
 
-    <!-- Hero Banner -->
+    <!-- Banner Trang -->
     <section class="page-banner">
         <div class="banner-overlay"></div>
         <div class="banner-content">
@@ -249,40 +249,40 @@ $categories = getAllCategories();
         </button>
         
         <div class="row">
-            <!-- Sidebar Filter -->
+            <!-- Thanh bên bộ lọc -->
             <div class="col-lg-3 mb-4">
-                <div class="collapse d-lg-block" id="filterSidebar">
-                <div class="filter-sidebar">
-                    <!-- Search Box -->
-                    <div class="filter-section">
-                        <h5 class="filter-title"><i class="fas fa-search me-2"></i>Tìm kiếm</h5>
-                        <form method="get" action="product_list.php">
-                            <!-- Category Select -->
-                            <div class="mb-3">
-                                <select name="category" class="form-select" id="categorySelect">
-                                    <option value="0" <?php echo $category_id == 0 ? 'selected' : ''; ?>>Tất cả sản phẩm</option>
-                                    <?php foreach ($categories as $cat): ?>
-                                        <option value="<?php echo $cat['category_id']; ?>" 
-                                                <?php echo $category_id == $cat['category_id'] ? 'selected' : ''; ?>>
-                                            <?php echo htmlspecialchars($cat['name']); ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            
-                            <!-- Search Input -->
-                            <div class="search-box">
-                                <input type="text" name="search" class="form-control" 
-                                       placeholder="Tìm kiếm sản phẩm..." 
-                                       value="<?php echo htmlspecialchars($search); ?>">
-                                <button type="submit" class="search-btn">
-                                    <i class="fas fa-search"></i>
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+                <div class="collapse show d-lg-block" id="filterSidebar">
+                    <div class="filter-sidebar">
+                        <!-- Hộp tìm kiếm -->
+                        <div class="filter-section">
+                            <h5 class="filter-title"><i class="fas fa-search me-2"></i>Tìm kiếm</h5>
+                            <form method="get" action="product_list.php">
+                                <!-- Chọn danh mục -->
+                                <div class="mb-3">
+                                    <select name="category" class="form-select" id="categorySelect">
+                                        <option value="0" <?php echo $category_id == 0 ? 'selected' : ''; ?>>Tất cả sản phẩm</option>
+                                        <?php foreach ($categories as $cat): ?>
+                                            <option value="<?php echo $cat['category_id']; ?>" 
+                                                    <?php echo $category_id == $cat['category_id'] ? 'selected' : ''; ?>>
+                                                <?php echo htmlspecialchars($cat['name']); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                
+                                <!-- Ô nhập tìm kiếm -->
+                                <div class="search-box">
+                                    <input type="text" name="search" class="form-control" 
+                                           placeholder="Tìm kiếm sản phẩm..." 
+                                           value="<?php echo htmlspecialchars($search); ?>">
+                                    <button type="submit" class="search-btn">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
 
-                    <!-- Category Filter -->
+                    <!-- Bộ lọc danh mục -->
                     <div class="filter-section">
                         <h5 class="filter-title"><i class="fas fa-list me-2"></i>Danh mục</h5>
                         <ul class="category-list">
@@ -308,7 +308,7 @@ $categories = getAllCategories();
                         </ul>
                     </div>
 
-                    <!-- Price Filter Info -->
+                    <!-- Thông tin bộ lọc giá -->
                     <div class="filter-section">
                         <h5 class="filter-title"><i class="fas fa-tag me-2"></i>Khoảng giá</h5>
                         <div class="price-info">
@@ -338,11 +338,11 @@ $categories = getAllCategories();
                         </div>
                     </div>
                 </div>
-                </div>
             </div>
+        </div>
 
-            <!-- Product Grid -->
-            <div class="col-lg-9">
+        <!-- Lưới sản phẩm -->
+        <div class="col-lg-9">
                 <!-- Toolbar -->
                 <div class="products-toolbar">
                     <div class="toolbar-left">
@@ -383,6 +383,7 @@ $categories = getAllCategories();
                 </div>
 
                 <!-- Products Grid -->
+                <!-- DEBUG: Tổng sản phẩm: <?php echo $total_products; ?> | Hiển thị: <?php echo count($products); ?> -->
                 <?php if (!empty($products)): ?>
                     <div class="products-grid">
                         <?php foreach ($products as $product): 

@@ -74,7 +74,7 @@ if (isset($_SESSION['user_id'])) {
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" href="profile.php"><i class="fas fa-user-edit me-2"></i>Hồ sơ</a></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="../../controller/controller_User/logout.php"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
+                                <li><a class="dropdown-item" href="../../controller/controller_User/controller.php?action=logout"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
                             </ul>
                         </li>
                     <?php else: ?>
@@ -99,11 +99,11 @@ if (isset($_SESSION['user_id'])) {
             </div>
         </div>
 
-        <div class="row">
-            <!-- Left Side - Cart Items -->
+        <div class="row g-4">
+            <!-- Cột trái - Sản phẩm trong giỏ -->
             <div class="col-lg-8">
-                <!-- Cart Items Header -->
-                <div class="cart-items-header">
+                <!-- Tiêu đề sản phẩm -->
+                <div class="items-header">
                     <div class="row">
                         <div class="col-md-6">
                             <h6 class="fw-bold">Sản phẩm</h6>
@@ -307,7 +307,7 @@ if (isset($_SESSION['user_id'])) {
         </div>
     </footer>
 
-    <!-- Back to Top Button -->
+    <!-- Nút lên đầu trang -->
     <button id="backToTopBtn" class="back-to-top">
         <i class="fas fa-arrow-up"></i>
     </button>
