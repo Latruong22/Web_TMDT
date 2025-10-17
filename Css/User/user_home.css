@@ -6,7 +6,7 @@
   --text-light: #666666;
   --border-color: #e0e0e0;
   --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  --transition: all 0.3s ease;
+  --transition: all 0.2s ease;
 }
 
 * {
@@ -162,12 +162,13 @@ body {
 .feature-box {
   text-align: center;
   padding: 1.5rem;
-  border-radius: 8px;
+  border-radius: 5px;
+  border:rgba(0, 0, 0, 0.1) 0.5px solid;
   transition: var(--transition);
 }
 
 .feature-box:hover {
-  background-color: #f8f9fa;
+  background-color: #a3a6a83d;
   transform: translateY(-5px);
 }
 
@@ -313,7 +314,7 @@ body {
 
 /* ========== CHÂN TRANG ========== */
 .footer {
-  background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%);
+  background: rgba(var(--bs-dark-rgb),var(--bs-bg-opacity))!important;
   margin-top: 4rem;
 }
 

@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", function () {
   initOrderCardAnimations();
   initFilterHighlight();
   initTooltips();
+  initReviewModalInteractions();
 });
 
 /**
@@ -303,6 +304,364 @@ document.querySelectorAll(".pagination .page-link").forEach((link) => {
 });
 
 /**
+ * Open Review Modal for Order (History Page)
+ */
+function openOrderReviewModal(orderId) {
+  // Fetch order products
+  fetch(
+    `../../controller/controller_User/order_controller.php?action=get_order_items&order_id=${orderId}`
+  )
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success && data.items && data.items.length > 0) {
+        const products = data.items.map((item) => ({
+          id: item.product_id,
+          name: item.product_name,
+          image: getProductImageUrl(item.product_id, item.product_image),
+        }));
+
+        if (products.length === 1) {
+          // Single product - open review modal directly
+          showReviewModal(
+            products[0].id,
+            products[0].name,
+            products[0].image,
+            orderId
+          );
+        } else {
+          // Multiple products - show selection modal
+          showProductSelectionModal(products, orderId);
+        }
+      } else {
+        showNotification("Không tìm thấy sản phẩm trong đơn hàng", "error");
+      }
+    })
+    .catch((error) => {
+      console.error("Error fetching order items:", error);
+      showNotification("Lỗi khi tải thông tin đơn hàng", "error");
+    });
+}
+
+/**
+ * Get Product Image URL
+ */
+function getProductImageUrl(productId, fallbackImage) {
+  // If no fallback image, try folder structure
+  if (!fallbackImage) {
+    return `/Web_TMDT/Images/product/Sp${productId}/main.jpg`;
+  }
+
+  // If already full path with /Web_TMDT/ or http
+  if (
+    fallbackImage.startsWith("http") ||
+    fallbackImage.startsWith("/Web_TMDT/")
+  ) {
+    return fallbackImage;
+  }
+
+  // If starts with "Images/" - add /Web_TMDT/ prefix
+  if (fallbackImage.startsWith("Images/")) {
+    return `/Web_TMDT/${fallbackImage}`;
+  }
+
+  // Otherwise assume it's in product folder
+  return `/Web_TMDT/Images/product/Sp${productId}/${fallbackImage}`;
+}
+
+/**
+ * Show Product Selection Modal
+ */
+function showProductSelectionModal(products, orderId) {
+  const html = `
+    <div class="modal fade" id="productSelectionModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">
+              <i class="fas fa-box-open me-2"></i>Chọn sản phẩm để đánh giá
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <p class="text-muted mb-3">Vui lòng chọn sản phẩm bạn muốn đánh giá:</p>
+            <div class="list-group">
+              ${products
+                .map(
+                  (product) => `
+                <button type="button" class="list-group-item list-group-item-action" 
+                        onclick="selectProductForReview(${
+                          product.id
+                        }, '${escapeHtml(product.name)}', '${
+                    product.image
+                  }', ${orderId})">
+                  <div class="d-flex align-items-center">
+                    <img src="${product.image}" alt="${escapeHtml(
+                    product.name
+                  )}" 
+                         style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;" class="me-3">
+                    <div class="flex-grow-1">
+                      <h6 class="mb-1">${escapeHtml(product.name)}</h6>
+                      <small class="text-muted">Nhấp để đánh giá</small>
+                    </div>
+                    <i class="fas fa-chevron-right text-muted"></i>
+                  </div>
+                </button>
+              `
+                )
+                .join("")}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Remove existing modal
+  const existingModal = document.getElementById("productSelectionModal");
+  if (existingModal) existingModal.remove();
+
+  // Add and show modal
+  document.body.insertAdjacentHTML("beforeend", html);
+  const modal = new bootstrap.Modal(
+    document.getElementById("productSelectionModal")
+  );
+  modal.show();
+}
+
+/**
+ * Select Product for Review
+ */
+function selectProductForReview(productId, productName, productImage, orderId) {
+  // Close selection modal
+  const selectionModal = bootstrap.Modal.getInstance(
+    document.getElementById("productSelectionModal")
+  );
+  if (selectionModal) selectionModal.hide();
+
+  // Open review modal
+  setTimeout(() => {
+    showReviewModal(productId, productName, productImage, orderId);
+  }, 300);
+}
+
+/**
+ * Show Review Modal
+ */
+function showReviewModal(productId, productName, productImage, orderId) {
+  // Check if user can review
+  checkCanReview(productId, (canReview, message) => {
+    if (!canReview) {
+      showNotification(message, "warning");
+      return;
+    }
+
+    // Populate product info
+    document.getElementById("reviewProductInfo").innerHTML = `
+      <div class="d-flex align-items-center">
+        <img src="${productImage}" alt="${escapeHtml(productName)}" 
+             style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;" class="me-3">
+        <div>
+          <h6 class="mb-0">${escapeHtml(productName)}</h6>
+          <small class="text-muted">Sản phẩm bạn đã mua</small>
+        </div>
+      </div>
+    `;
+
+    // Set form values
+    document.getElementById("review_product_id").value = productId;
+    document.getElementById("review_order_id").value = orderId;
+
+    // Reset form
+    document.getElementById("reviewForm").reset();
+    document.getElementById("review_rating").value = "";
+    document.getElementById("char_count").textContent = "0";
+
+    // Reset stars
+    document
+      .querySelectorAll("#reviewModal .star-rating-input i")
+      .forEach((star) => {
+        star.className = "far fa-star";
+      });
+
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById("reviewModal"));
+    modal.show();
+  });
+}
+
+/**
+ * Check if User Can Review
+ */
+function checkCanReview(productId, callback) {
+  fetch(
+    `../../controller/controller_User/review_controller.php?action=check_can_review&product_id=${productId}`
+  )
+    .then((response) => response.json())
+    .then((data) => {
+      callback(data.success && data.can_review, data.message || "");
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      callback(false, "Lỗi kết nối");
+    });
+}
+
+/**
+ * Submit Review
+ */
+function submitReview() {
+  const productId = document.getElementById("review_product_id").value;
+  const orderId = document.getElementById("review_order_id").value;
+  const rating = document.getElementById("review_rating").value;
+  const content = document.getElementById("review_content").value.trim();
+
+  // Validation
+  if (!rating || rating < 1 || rating > 5) {
+    showNotification("Vui lòng chọn số sao đánh giá", "warning");
+    return;
+  }
+
+  if (!content || content.length < 10) {
+    showNotification("Vui lòng nhập ít nhất 10 ký tự nhận xét", "warning");
+    return;
+  }
+
+  if (content.length > 500) {
+    showNotification("Nhận xét không được vượt quá 500 ký tự", "warning");
+    return;
+  }
+
+  // Disable button
+  const submitBtn = document.querySelector(
+    "#reviewModal .modal-footer .btn-primary"
+  );
+  const originalHtml = submitBtn.innerHTML;
+  submitBtn.disabled = true;
+  submitBtn.innerHTML =
+    '<i class="fas fa-spinner fa-spin me-1"></i>Đang gửi...';
+
+  // Prepare form data
+  const formData = new FormData();
+  formData.append("action", "submit_review");
+  formData.append("product_id", productId);
+  formData.append("order_id", orderId);
+  formData.append("rating", rating);
+  formData.append("content", content);
+
+  // Submit
+  fetch("../../controller/controller_User/review_controller.php", {
+    method: "POST",
+    body: formData,
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        showNotification(
+          data.message || "Đánh giá đã được gửi thành công!",
+          "success"
+        );
+
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(
+          document.getElementById("reviewModal")
+        );
+        if (modal) modal.hide();
+
+        // Reset form
+        document.getElementById("reviewForm").reset();
+
+        // Reload page
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      } else {
+        showNotification(data.message || "Không thể gửi đánh giá", "error");
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalHtml;
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      showNotification("Lỗi kết nối, vui lòng thử lại", "error");
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalHtml;
+    });
+}
+
+/**
+ * Escape HTML
+ */
+function escapeHtml(text) {
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+/**
+ * Initialize Review Modal Interactions
+ */
+function initReviewModalInteractions() {
+  // Star rating click
+  document.addEventListener("click", function (e) {
+    if (e.target.closest("#reviewModal .star-rating-input i")) {
+      const star = e.target.closest("i");
+      const rating = parseInt(star.getAttribute("data-rating"));
+
+      document.getElementById("review_rating").value = rating;
+
+      const stars = document.querySelectorAll(
+        "#reviewModal .star-rating-input i"
+      );
+      stars.forEach((s, index) => {
+        s.className =
+          index < rating ? "fas fa-star text-warning" : "far fa-star";
+      });
+    }
+  });
+
+  // Star hover
+  document.addEventListener("mouseover", function (e) {
+    if (e.target.closest("#reviewModal .star-rating-input i")) {
+      const star = e.target.closest("i");
+      const rating = parseInt(star.getAttribute("data-rating"));
+
+      const stars = document.querySelectorAll(
+        "#reviewModal .star-rating-input i"
+      );
+      stars.forEach((s, index) => {
+        if (index < rating) s.style.color = "#ffc107";
+      });
+    }
+  });
+
+  document.addEventListener("mouseout", function (e) {
+    if (e.target.closest("#reviewModal .star-rating-input")) {
+      const currentRating =
+        parseInt(document.getElementById("review_rating").value) || 0;
+      const stars = document.querySelectorAll(
+        "#reviewModal .star-rating-input i"
+      );
+
+      stars.forEach((s, index) => {
+        if (index < currentRating) {
+          s.className = "fas fa-star text-warning";
+        } else {
+          s.className = "far fa-star";
+          s.style.color = "";
+        }
+      });
+    }
+  });
+
+  // Character counter
+  document.addEventListener("input", function (e) {
+    if (e.target.id === "review_content") {
+      document.getElementById("char_count").textContent = e.target.value.length;
+    }
+  });
+}
+
+/**
  * Add keyboard shortcuts
  */
 document.addEventListener("keydown", function (e) {
@@ -353,6 +712,21 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// ============================================
+// CANCEL ORDER - REDIRECT TO ORDER TRACKING
+// ============================================
+
+/**
+ * Redirect to order tracking page to cancel order
+ * Order tracking page has the cancel modal
+ */
+function redirectToCancelOrder(orderId) {
+  if (confirm("Bạn muốn hủy đơn hàng #" + orderId + "?")) {
+    // Redirect to order tracking page where cancel modal is available
+    window.location.href = "order_tracking.php?order_id=" + orderId;
+  }
+}
 
 /**
  * Log page view (optional analytics)

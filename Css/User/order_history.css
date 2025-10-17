@@ -505,3 +505,48 @@
     border: 1px solid #000;
   }
 }
+
+/* ========== REVIEW MODAL STYLES ========== */
+.star-rating-input {
+  font-size: 2rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.star-rating-input i {
+  color: #ddd;
+  transition: all 0.2s ease;
+  margin: 0 4px;
+}
+
+.star-rating-input i:hover {
+  transform: scale(1.2);
+  color: #ffc107;
+}
+
+.star-rating-input i.fas {
+  color: #ffc107;
+}
+
+#reviewProductInfo img {
+  border: 2px solid #e9ecef;
+}
+
+#reviewForm .form-control:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+#char_count {
+  font-weight: 600;
+  color: #6c757d;
+}
+
+.list-group-item:hover {
+  background-color: #f8f9fa;
+  border-color: #0d6efd;
+}
+
+.list-group-item img {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}

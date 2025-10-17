@@ -391,15 +391,14 @@ function getProductThumbnail($product_id, $fallback_image = '') {
                                     </a>
                                     
                                     <?php if ($order['status'] === 'pending'): ?>
-                                        <a href="order_cancel.php?order_id=<?= $order['order_id'] ?>" 
-                                           class="btn btn-outline-danger btn-sm"
-                                           onclick="return confirm('Bạn có chắc muốn hủy đơn hàng này?')">
+                                        <button class="btn btn-outline-danger btn-sm"
+                                                onclick="redirectToCancelOrder(<?= $order['order_id'] ?>)">
                                             <i class="fas fa-times me-1"></i> Hủy đơn
-                                        </a>
+                                        </button>
                                     <?php endif; ?>
                                     
                                     <?php if ($order['status'] === 'delivered'): ?>
-                                        <button class="btn btn-outline-success btn-sm">
+                                        <button class="btn btn-outline-success btn-sm" onclick="openOrderReviewModal(<?= $order['order_id'] ?>)">
                                             <i class="fas fa-star me-1"></i> Đánh giá
                                         </button>
                                     <?php endif; ?>
@@ -467,6 +466,75 @@ function getProductThumbnail($product_id, $fallback_image = '') {
                 </nav>
             <?php endif; ?>
         <?php endif; ?>
+    </div>
+
+    <!-- Modal Đánh giá sản phẩm -->
+    <div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="reviewModalLabel">
+                        <i class="fas fa-star me-2"></i>Đánh giá sản phẩm
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Thông tin sản phẩm đang đánh giá -->
+                    <div class="product-review-info mb-3 p-3 bg-light rounded" id="reviewProductInfo">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+
+                    <!-- Form đánh giá -->
+                    <form id="reviewForm">
+                        <input type="hidden" id="review_product_id" name="product_id">
+                        <input type="hidden" id="review_order_id" name="order_id">
+                        
+                        <!-- Đánh giá sao -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Đánh giá của bạn <span class="text-danger">*</span></label>
+                            <div class="star-rating-input">
+                                <i class="far fa-star" data-rating="1"></i>
+                                <i class="far fa-star" data-rating="2"></i>
+                                <i class="far fa-star" data-rating="3"></i>
+                                <i class="far fa-star" data-rating="4"></i>
+                                <i class="far fa-star" data-rating="5"></i>
+                            </div>
+                            <input type="hidden" id="review_rating" name="rating" required>
+                            <small class="text-muted">Nhấp vào sao để đánh giá</small>
+                        </div>
+
+                        <!-- Nội dung đánh giá -->
+                        <div class="mb-3">
+                            <label for="review_content" class="form-label fw-bold">
+                                Nhận xét của bạn <span class="text-danger">*</span>
+                            </label>
+                            <textarea class="form-control" id="review_content" name="content" rows="4" 
+                                      placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..."
+                                      minlength="10" maxlength="500" required></textarea>
+                            <div class="d-flex justify-content-between mt-1">
+                                <small class="text-muted">Tối thiểu 10 ký tự</small>
+                                <small class="text-muted">
+                                    <span id="char_count">0</span>/500
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Đánh giá của bạn sẽ được kiểm duyệt trước khi hiển thị công khai.
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Đóng
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="submitReview()">
+                        <i class="fas fa-paper-plane me-1"></i>Gửi đánh giá
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Footer -->

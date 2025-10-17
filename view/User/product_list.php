@@ -213,7 +213,9 @@ $categories = getAllCategories();
                                 <i class="fas fa-user me-1"></i><?php echo htmlspecialchars($_SESSION['fullname']); ?>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="../../controller/controller_User/controller.php?action=logout">Đăng xuất</a></li>
+                                <li><a class="dropdown-item" href="profile.php"><i class="fas fa-user-edit me-2"></i>Hồ sơ</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="../../controller/controller_User/controller.php?action=logout"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
                             </ul>
                         </li>
                     <?php else: ?>

@@ -283,37 +283,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // Initialize cart count on page load
   updateCartCount();
 
-  // ============================================
-  // TOAST NOTIFICATION
-  // ============================================
-
-  function showToast(message, type = "success") {
-    const toastEl = document.getElementById("cartToast");
-    if (!toastEl) return;
-
-    const toastHeader = toastEl.querySelector(".toast-header strong");
-    const toastBody = toastEl.querySelector(".toast-body");
-    const toastIcon = toastEl.querySelector(".toast-header i");
-
-    // Update content
-    toastBody.textContent = message;
-
-    // Update styling based on type
-    if (type === "success") {
-      toastIcon.className = "fas fa-check-circle text-success me-2";
-      toastHeader.textContent = "Thành công";
-    } else if (type === "warning") {
-      toastIcon.className = "fas fa-exclamation-circle text-warning me-2";
-      toastHeader.textContent = "Cảnh báo";
-    } else if (type === "error") {
-      toastIcon.className = "fas fa-times-circle text-danger me-2";
-      toastHeader.textContent = "Lỗi";
-    }
-
-    // Show toast
-    const toast = new bootstrap.Toast(toastEl);
-    toast.show();
-  }
+  // Note: showToast is now a global function (defined after DOMContentLoaded)
 
   // ============================================
   // WISHLIST BUTTON
@@ -446,6 +416,287 @@ document.addEventListener("DOMContentLoaded", function () {
   console.log("Is Shoe:", productData.isShoe);
   console.log("Stock:", productData.stock);
 });
+
+// ============================================
+// TOAST NOTIFICATION (GLOBAL)
+// ============================================
+
+function showToast(message, type = "success") {
+  const toastEl = document.getElementById("cartToast");
+  if (!toastEl) return;
+
+  const toastHeader = toastEl.querySelector(".toast-header strong");
+  const toastBody = toastEl.querySelector(".toast-body");
+  const toastIcon = toastEl.querySelector(".toast-header i");
+
+  // Update content
+  toastBody.textContent = message;
+
+  // Update styling based on type
+  if (type === "success") {
+    toastIcon.className = "fas fa-check-circle text-success me-2";
+    toastHeader.textContent = "Thành công";
+  } else if (type === "warning") {
+    toastIcon.className = "fas fa-exclamation-circle text-warning me-2";
+    toastHeader.textContent = "Cảnh báo";
+  } else if (type === "error") {
+    toastIcon.className = "fas fa-times-circle text-danger me-2";
+    toastHeader.textContent = "Lỗi";
+  }
+
+  // Show toast
+  const toast = new bootstrap.Toast(toastEl);
+  toast.show();
+}
+
+// ============================================
+// REVIEW SYSTEM
+// ============================================
+
+// Rating Stars Interaction
+document.addEventListener("DOMContentLoaded", function () {
+  const reviewContent = document.getElementById("reviewContent");
+  const charCount = document.getElementById("charCount");
+  const starLabels = document.querySelectorAll(".star-label");
+
+  // Character counter
+  if (reviewContent && charCount) {
+    reviewContent.addEventListener("input", function () {
+      charCount.textContent = this.value.length;
+
+      // Color feedback
+      if (this.value.length < 10) {
+        charCount.style.color = "#dc3545"; // Red
+      } else if (this.value.length >= 500) {
+        charCount.style.color = "#ffc107"; // Yellow
+      } else {
+        charCount.style.color = "#28a745"; // Green
+      }
+    });
+  }
+
+  // Star rating interaction
+  starLabels.forEach((label, index) => {
+    const input = label.previousElementSibling;
+
+    label.addEventListener("click", function () {
+      // Check the radio input
+      input.checked = true;
+
+      // Update star display
+      updateStarDisplay(index);
+    });
+
+    // Hover effect
+    label.addEventListener("mouseenter", function () {
+      starLabels.forEach((l, i) => {
+        const star = l.querySelector("i");
+        if (i <= index) {
+          star.classList.add("fas");
+          star.classList.remove("far");
+        } else {
+          star.classList.remove("fas");
+          star.classList.add("far");
+        }
+      });
+    });
+  });
+
+  // Reset stars on mouse leave to checked state or empty
+  const ratingInput = document.querySelector(".rating-input");
+  if (ratingInput) {
+    ratingInput.addEventListener("mouseleave", function () {
+      const checkedInput = this.querySelector('input[name="rating"]:checked');
+      if (checkedInput) {
+        const checkedIndex = parseInt(checkedInput.value) - 1;
+        updateStarDisplay(checkedIndex);
+      } else {
+        // Reset all to empty
+        starLabels.forEach((l) => {
+          const star = l.querySelector("i");
+          star.classList.remove("fas");
+          star.classList.add("far");
+        });
+      }
+    });
+  }
+
+  // Helper function to update star display
+  function updateStarDisplay(selectedIndex) {
+    starLabels.forEach((l, i) => {
+      const star = l.querySelector("i");
+      if (i <= selectedIndex) {
+        star.classList.add("fas");
+        star.classList.remove("far");
+      } else {
+        star.classList.remove("fas");
+        star.classList.add("far");
+      }
+    });
+  }
+});
+
+// Submit Review Function
+function submitReview() {
+  const form = document.getElementById("reviewForm");
+  const formData = new FormData(form);
+  formData.append("action", "submit_review");
+
+  // Validate rating
+  const rating = formData.get("rating");
+  if (!rating) {
+    alert("⚠️ Vui lòng chọn số sao đánh giá!");
+    return;
+  }
+
+  // Validate content
+  const content = formData.get("content");
+  if (!content || content.trim().length < 10) {
+    alert("⚠️ Nhận xét phải có ít nhất 10 ký tự!");
+    return;
+  }
+
+  if (content.length > 500) {
+    alert("⚠️ Nhận xét không được quá 500 ký tự!");
+    return;
+  }
+
+  // Get submit button from modal
+  const submitBtn = document.querySelector(
+    "#reviewModal .modal-footer .btn-primary"
+  );
+  if (!submitBtn) {
+    console.error("Submit button not found");
+    return;
+  }
+
+  const originalText = submitBtn.innerHTML;
+  submitBtn.disabled = true;
+  submitBtn.innerHTML =
+    '<span class="spinner-border spinner-border-sm me-2"></span>Đang gửi...';
+
+  // Submit via AJAX
+  fetch("/Web_TMDT/controller/controller_User/review_controller.php", {
+    method: "POST",
+    body: formData,
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(
+          document.getElementById("reviewModal")
+        );
+        modal.hide();
+
+        // Show success message
+        showToast(data.message, "success");
+
+        // Reset form
+        form.reset();
+        document.getElementById("charCount").textContent = "0";
+
+        // Reset stars
+        document.querySelectorAll(".star-label i").forEach((star) => {
+          star.classList.remove("fas");
+          star.classList.add("far");
+        });
+
+        // Reload page after 2 seconds
+        setTimeout(() => {
+          location.reload();
+        }, 2000);
+      } else {
+        alert("❌ " + data.message);
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      alert("❌ Có lỗi xảy ra, vui lòng thử lại sau!");
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalText;
+    });
+}
+
+// Load More Reviews
+let currentOffset = 5;
+function loadMoreReviews() {
+  const productId = productData.id;
+
+  fetch(
+    `/Web_TMDT/controller/controller_User/review_controller.php?action=get_reviews&product_id=${productId}&limit=5&offset=${currentOffset}`
+  )
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success && data.reviews.length > 0) {
+        const reviewsList = document.querySelector(".reviews-list");
+
+        data.reviews.forEach((review) => {
+          const reviewCard = createReviewCard(review);
+          const loadMoreBtn = reviewsList.querySelector(".text-center");
+          reviewsList.insertBefore(reviewCard, loadMoreBtn);
+        });
+
+        currentOffset += 5;
+
+        // Hide button if no more reviews
+        if (currentOffset >= data.rating.total) {
+          const loadMoreBtn = reviewsList.querySelector(".text-center");
+          if (loadMoreBtn) loadMoreBtn.remove();
+        }
+      }
+    })
+    .catch((error) => {
+      console.error("Error loading more reviews:", error);
+    });
+}
+
+// Create Review Card HTML
+function createReviewCard(review) {
+  const card = document.createElement("div");
+  card.className = "card mb-3 border-0 shadow-sm review-item";
+
+  let starsHtml = "";
+  for (let i = 1; i <= 5; i++) {
+    const starClass =
+      i <= review.rating ? "fas text-warning" : "fas text-muted";
+    starsHtml += `<i class="${starClass} fa-star"></i>`;
+  }
+
+  card.innerHTML = `
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                    <h6 class="mb-1 fw-bold">${escapeHtml(review.fullname)}</h6>
+                    <div class="stars">${starsHtml}</div>
+                </div>
+                <small class="text-muted">
+                    <i class="far fa-clock me-1"></i>${review.formatted_date}
+                </small>
+            </div>
+            <p class="mb-0 text-secondary">${escapeHtml(review.content).replace(
+              /\n/g,
+              "<br>"
+            )}</p>
+        </div>
+    `;
+
+  return card;
+}
+
+// HTML escape function
+function escapeHtml(text) {
+  const map = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;",
+  };
+  return text.replace(/[&<>"']/g, (m) => map[m]);
+}
 
 // ============================================
 // CSS ANIMATION FOR SHAKE

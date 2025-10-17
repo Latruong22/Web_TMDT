@@ -30,7 +30,7 @@ body {
 .navbar {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   padding: 1rem 0;
-  background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%) !important;
+  background: rgba(var(--bs-dark-rgb),var(--bs-bg-opacity))!important;
 }
 
 .logo-img {
@@ -108,8 +108,8 @@ body {
   bottom: 0;
   background: linear-gradient(
     135deg,
-    rgba(0, 0, 0, 0.7) 0%,
-    rgba(0, 0, 0, 0.4) 100%
+    rgba(0, 0, 0, 0.4) 0%,
+    rgba(0, 0, 0, 0.3) 80%
   );
 }
 
@@ -753,7 +753,7 @@ body {
 
 /* ========== CHÂN TRANG ========== */
 .footer {
-  background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%);
+  background: rgba(var(--bs-dark-rgb),var(--bs-bg-opacity))!important;
   margin-top: 5rem;
 }
 

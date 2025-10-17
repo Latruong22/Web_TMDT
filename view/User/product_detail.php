@@ -218,6 +218,8 @@ $discount_amount = $product['price'] - $final_price;
                                 <i class="fas fa-user me-1"></i><?= htmlspecialchars($_SESSION['fullname']) ?>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="profile.php"><i class="fas fa-user-edit me-2"></i>Hồ sơ</a></li>
+                                <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="../../controller/controller_User/controller.php?action=logout">
                                     <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
                                 </a></li>
@@ -635,6 +637,229 @@ $discount_amount = $product['price'] - $final_price;
             </div>
         </div>
     </div>
+
+    <!-- Reviews Section -->
+    <?php
+    require_once '../../model/review_model.php';
+    $product_rating = getProductRating($product_id);
+    $reviews = getProductReviews($product_id, 5, 0);
+    $can_review = isset($_SESSION['user_id']) ? canUserReview($_SESSION['user_id'], $product_id) : false;
+    ?>
+    
+    <section class="reviews-section py-5 bg-light">
+        <div class="container">
+            <h3 class="section-title mb-4">
+                <i class="fas fa-star text-warning me-2"></i>Đánh giá sản phẩm
+            </h3>
+            
+            <!-- Rating Summary -->
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-3 text-center border-end">
+                            <div class="average-rating">
+                                <h1 class="display-3 mb-0 fw-bold text-warning">
+                                    <?= $product_rating['average'] > 0 ? $product_rating['average'] : '0.0' ?>
+                                </h1>
+                                <div class="stars mb-2">
+                                    <?php for($i = 1; $i <= 5; $i++): ?>
+                                        <i class="fas fa-star <?= $i <= round($product_rating['average']) ? 'text-warning' : 'text-muted' ?>"></i>
+                                    <?php endfor; ?>
+                                </div>
+                                <p class="text-muted mb-0">
+                                    <strong><?= $product_rating['total'] ?></strong> đánh giá
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 py-3">
+                            <div class="rating-breakdown">
+                                <?php for($star = 5; $star >= 1; $star--): ?>
+                                    <?php 
+                                    $count = $product_rating['stars'][$star];
+                                    $percentage = $product_rating['total'] > 0 ? round(($count / $product_rating['total']) * 100) : 0;
+                                    ?>
+                                    <div class="d-flex align-items-center mb-2">
+                                        <span class="me-2" style="min-width: 60px;">
+                                            <?= $star ?> <i class="fas fa-star text-warning"></i>
+                                        </span>
+                                        <div class="progress flex-grow-1 me-2" style="height: 8px;">
+                                            <div class="progress-bar bg-warning" role="progressbar" 
+                                                 style="width: <?= $percentage ?>%" 
+                                                 aria-valuenow="<?= $percentage ?>" 
+                                                 aria-valuemin="0" 
+                                                 aria-valuemax="100"></div>
+                                        </div>
+                                        <span class="text-muted" style="min-width: 40px;"><?= $count ?></span>
+                                    </div>
+                                <?php endfor; ?>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <?php if (isset($_SESSION['user_id'])): ?>
+                                <?php if ($can_review): ?>
+                                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reviewModal">
+                                        <i class="fas fa-edit me-2"></i>Viết đánh giá
+                                    </button>
+                                <?php else: ?>
+                                    <button class="btn btn-secondary" disabled>
+                                        <i class="fas fa-check me-2"></i>Đã đánh giá
+                                    </button>
+                                <?php endif; ?>
+                            <?php else: ?>
+                                <a href="login.php?redirect=product_detail.php?id=<?= $product_id ?>" class="btn btn-outline-primary">
+                                    <i class="fas fa-sign-in-alt me-2"></i>Đăng nhập để đánh giá
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Reviews List -->
+            <div class="reviews-list">
+                <?php if (empty($reviews)): ?>
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center py-5">
+                            <i class="fas fa-comments fa-3x text-muted mb-3"></i>
+                            <p class="text-muted mb-0">Chưa có đánh giá nào cho sản phẩm này</p>
+                            <?php if ($can_review): ?>
+                                <p class="text-muted">Hãy là người đầu tiên đánh giá!</p>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php else: ?>
+                    <?php foreach ($reviews as $review): ?>
+                        <div class="card mb-3 border-0 shadow-sm review-item">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <h6 class="mb-1 fw-bold"><?= htmlspecialchars($review['fullname']) ?></h6>
+                                        <div class="stars">
+                                            <?php for($i = 1; $i <= 5; $i++): ?>
+                                                <i class="fas fa-star <?= $i <= $review['rating'] ? 'text-warning' : 'text-muted' ?>"></i>
+                                            <?php endfor; ?>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">
+                                        <i class="far fa-clock me-1"></i><?= $review['formatted_date'] ?>
+                                    </small>
+                                </div>
+                                <p class="mb-0 text-secondary"><?= nl2br(htmlspecialchars($review['content'])) ?></p>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                    
+                    <?php if ($product_rating['total'] > 5): ?>
+                        <div class="text-center mt-3">
+                            <button class="btn btn-outline-dark" onclick="loadMoreReviews()">
+                                <i class="fas fa-chevron-down me-2"></i>Xem thêm đánh giá
+                            </button>
+                        </div>
+                    <?php endif; ?>
+                <?php endif; ?>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Review Modal -->
+    <div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="reviewModalLabel">
+                        <i class="fas fa-star text-warning me-2"></i>Đánh giá sản phẩm
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="reviewForm">
+                        <input type="hidden" name="product_id" value="<?= $product_id ?>">
+                        
+                        <!-- Product Info -->
+                        <div class="mb-3 p-3 bg-light rounded">
+                            <small class="text-muted">Sản phẩm:</small>
+                            <p class="mb-0 fw-bold"><?= htmlspecialchars($product['name']) ?></p>
+                        </div>
+                        
+                        <!-- Rating Stars -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                Đánh giá của bạn <span class="text-danger">*</span>
+                            </label>
+                            <div class="rating-input d-flex gap-2">
+                                <?php for($i = 1; $i <= 5; $i++): ?>
+                                    <input type="radio" name="rating" id="star<?= $i ?>" value="<?= $i ?>" required hidden>
+                                    <label for="star<?= $i ?>" class="star-label mb-0">
+                                        <i class="far fa-star"></i>
+                                    </label>
+                                <?php endfor; ?>
+                            </div>
+                            <small class="text-muted">Nhấp vào sao để đánh giá</small>
+                        </div>
+                        
+                        <!-- Comment -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                Nhận xét của bạn <span class="text-danger">*</span>
+                            </label>
+                            <textarea name="content" id="reviewContent" class="form-control" rows="4" 
+                                      placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..." 
+                                      required minlength="10" maxlength="500"></textarea>
+                            <div class="form-text">
+                                <span id="charCount">0</span>/500 ký tự (tối thiểu 10 ký tự)
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <small>Đánh giá của bạn sẽ được kiểm duyệt trước khi hiển thị công khai</small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Hủy
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="submitReview()">
+                        <i class="fas fa-paper-plane me-2"></i>Gửi đánh giá
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+    /* Rating Input Styles */
+    .rating-input {
+        flex-direction: row;
+        justify-content: flex-start;
+    }
+    .star-label {
+        font-size: 2rem;
+        color: #ddd;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .star-label:hover {
+        transform: scale(1.1);
+    }
+    /* Remove conflicting CSS - let JavaScript handle stars */
+    .star-label i.fas {
+        color: #ffc107;
+    }
+    .star-label i.far {
+        color: #ddd;
+    }
+    
+    /* Review Item Hover */
+    .review-item {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .review-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15) !important;
+    }
+    </style>
 
     <!-- Footer -->
     <footer class="footer bg-dark text-white py-5 mt-5">

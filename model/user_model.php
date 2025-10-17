@@ -460,7 +460,7 @@ function getUserSummaryStats() {
 // Lấy thông tin người dùng theo ID
 function getUserById($user_id) {
     global $conn;
-    $stmt = $conn->prepare("SELECT user_id, fullname, email, phone, address, role, status, created_at FROM users WHERE user_id = ?");
+    $stmt = $conn->prepare("SELECT user_id, fullname, email, phone, address, avatar, role, status, created_at FROM users WHERE user_id = ?");
     if (!$stmt) {
         return null;
     }

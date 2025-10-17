@@ -209,6 +209,16 @@ function getProductThumbnail($product_id, $fallback_image = '') {
                     </span>
                 </div>
             </div>
+            
+            <!-- Hiển thị lý do hủy nếu đơn hàng đã bị hủy -->
+            <?php if ($order['status'] === 'cancelled' && !empty($order['cancel_reason'])): ?>
+            <div class="alert alert-warning mt-3">
+                <h6 class="alert-heading mb-2">
+                    <i class="fas fa-info-circle me-2"></i>Lý do hủy đơn hàng:
+                </h6>
+                <p class="mb-0"><?= htmlspecialchars($order['cancel_reason']) ?></p>
+            </div>
+            <?php endif; ?>
         </div>
 
         <div class="row">
@@ -298,7 +308,7 @@ function getProductThumbnail($product_id, $fallback_image = '') {
                                 </thead>
                                 <tbody>
                                     <?php foreach ($order_items as $item): ?>
-                                    <tr>
+                                    <tr data-product-id="<?= $item['product_id'] ?>">
                                         <td>
                                             <div class="d-flex align-items-center gap-3">
                                                 <img src="<?= getProductThumbnail($item['product_id'], $item['product_image'] ?? '') ?>" 
@@ -399,9 +409,9 @@ function getProductThumbnail($product_id, $fallback_image = '') {
                     <div class="card-body">
                         <div class="d-grid gap-2">
                             <?php if ($order['status'] === 'pending'): ?>
-                            <a href="order_cancel.php?order_id=<?= $order_id ?>" class="btn btn-outline-danger">
+                            <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelOrderModal">
                                 <i class="fas fa-times-circle me-2"></i>Hủy đơn hàng
-                            </a>
+                            </button>
                             <?php endif; ?>
                             
                             <?php if ($order['status'] === 'delivered'): ?>
@@ -422,6 +432,75 @@ function getProductThumbnail($product_id, $fallback_image = '') {
                             </button>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Đánh giá sản phẩm -->
+    <div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="reviewModalLabel">
+                        <i class="fas fa-star me-2"></i>Đánh giá sản phẩm
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Thông tin sản phẩm đang đánh giá -->
+                    <div class="product-review-info mb-3 p-3 bg-light rounded" id="reviewProductInfo">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+
+                    <!-- Form đánh giá -->
+                    <form id="reviewForm">
+                        <input type="hidden" id="review_product_id" name="product_id">
+                        <input type="hidden" id="review_order_id" name="order_id" value="<?= $order_id ?>">
+                        
+                        <!-- Đánh giá sao -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Đánh giá của bạn <span class="text-danger">*</span></label>
+                            <div class="star-rating-input">
+                                <i class="far fa-star" data-rating="1"></i>
+                                <i class="far fa-star" data-rating="2"></i>
+                                <i class="far fa-star" data-rating="3"></i>
+                                <i class="far fa-star" data-rating="4"></i>
+                                <i class="far fa-star" data-rating="5"></i>
+                            </div>
+                            <input type="hidden" id="review_rating" name="rating" required>
+                            <small class="text-muted">Nhấp vào sao để đánh giá</small>
+                        </div>
+
+                        <!-- Nội dung đánh giá -->
+                        <div class="mb-3">
+                            <label for="review_content" class="form-label fw-bold">
+                                Nhận xét của bạn <span class="text-danger">*</span>
+                            </label>
+                            <textarea class="form-control" id="review_content" name="content" rows="4" 
+                                      placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..."
+                                      minlength="10" maxlength="500" required></textarea>
+                            <div class="d-flex justify-content-between mt-1">
+                                <small class="text-muted">Tối thiểu 10 ký tự</small>
+                                <small class="text-muted">
+                                    <span id="char_count">0</span>/500
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Đánh giá của bạn sẽ được kiểm duyệt trước khi hiển thị công khai.
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Đóng
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="submitReview()">
+                        <i class="fas fa-paper-plane me-1"></i>Gửi đánh giá
+                    </button>
                 </div>
             </div>
         </div>
@@ -479,6 +558,72 @@ function getProductThumbnail($product_id, $fallback_image = '') {
     <button id="backToTopBtn" class="back-to-top">
         <i class="fas fa-arrow-up"></i>
     </button>
+
+    <!-- Cancel Order Modal -->
+    <div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cancelOrderModalLabel">
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                        Hủy đơn hàng
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3"><strong>Vui lòng cho chúng tôi biết lý do bạn muốn hủy đơn hàng này:</strong></p>
+                    <div class="cancel-reasons">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="cancel_reason" 
+                                   id="reason1" value="Tôi muốn thay đổi địa chỉ giao hàng">
+                            <label class="form-check-label" for="reason1">
+                                Tôi muốn thay đổi địa chỉ giao hàng
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="cancel_reason" 
+                                   id="reason2" value="Tôi tìm được sản phẩm tốt hơn">
+                            <label class="form-check-label" for="reason2">
+                                Tôi tìm được sản phẩm tốt hơn
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="cancel_reason" 
+                                   id="reason3" value="Tôi đổi ý, không muốn mua nữa">
+                            <label class="form-check-label" for="reason3">
+                                Tôi đổi ý, không muốn mua nữa
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="cancel_reason" 
+                                   id="reason4" value="Thời gian giao hàng quá lâu">
+                            <label class="form-check-label" for="reason4">
+                                Thời gian giao hàng quá lâu
+                            </label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="radio" name="cancel_reason" 
+                                   id="reason5" value="Lý do khác">
+                            <label class="form-check-label" for="reason5">
+                                Lý do khác
+                            </label>
+                        </div>
+                        <textarea class="form-control" id="otherReason" 
+                                  placeholder="Vui lòng nhập lý do cụ thể..." 
+                                  rows="3" style="display: none;"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Đóng
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="submitCancelOrder()">
+                        <i class="fas fa-check me-2"></i>Xác nhận hủy đơn
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="../../config/bootstrap-5.3.8-dist/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
     <script src="../../Js/User/order_tracking.js"></script>
