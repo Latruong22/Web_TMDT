@@ -85,6 +85,10 @@ $range = $filters['range'];
                 <i class="fas fa-chart-line"></i>
                 <span>Báo cáo doanh thu</span>
             </a>
+            <a href="admin_email.php" class="nav-link">
+                <i class="fas fa-envelope"></i>
+                <span>Gửi Email</span>
+            </a>
         </nav>
         
         <div class="sidebar-footer">

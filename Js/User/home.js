@@ -1,5 +1,25 @@
 // Home page interactive features
 document.addEventListener("DOMContentLoaded", function () {
+  // Check if need to clear cart (khi login hoặc logout)
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get("clear_cart") === "1") {
+    // Clear cart và voucher từ localStorage
+    localStorage.removeItem("cart");
+    localStorage.removeItem("appliedVoucher");
+    console.log("✅ Cart cleared - User switched");
+
+    // Remove URL parameter để tránh clear lại khi refresh
+    const newUrl = window.location.pathname;
+    window.history.replaceState({}, document.title, newUrl);
+
+    // Update cart count về 0
+    const cartCountElements = document.querySelectorAll(".cart-count");
+    cartCountElements.forEach((el) => {
+      el.textContent = "0";
+      el.style.display = "none";
+    });
+  }
+
   // Auto play carousel with pause on hover
   const carousel = document.querySelector("#heroCarousel");
   if (carousel) {

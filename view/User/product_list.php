@@ -123,6 +123,7 @@ $categories = getAllCategories();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="user-id" content="<?php echo isset($_SESSION['user_id']) ? $_SESSION['user_id'] : ''; ?>">
     <meta name="description" content="Khám phá bộ sưu tập sản phẩm snowboard chất lượng cao. Giá tốt, giao hàng nhanh, uy tín hàng đầu.">
     <meta name="keywords" content="snowboard, ván trượt tuyết, thiết bị trượt tuyết, mua ván trượt">
     <meta name="author" content="Snowboard Shop">

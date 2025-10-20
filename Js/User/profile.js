@@ -1,10 +1,10 @@
 // ============================================
-// PROFILE PAGE - JAVASCRIPT
+// TRANG HỒ SƠ - JAVASCRIPT
 // ============================================
 
 document.addEventListener("DOMContentLoaded", function () {
   // ============================================
-  // SMOOTH SCROLL FOR SIDEBAR MENU
+  // CUỘN MƯỢT CHO MENU SIDEBAR
   // ============================================
 
   const menuLinks = document.querySelectorAll('.profile-menu-link[href^="#"]');
@@ -20,25 +20,25 @@ document.addEventListener("DOMContentLoaded", function () {
 
       e.preventDefault();
 
-      // Handle password link specially
+      // Xử lý đặc biệt link mật khẩu
       if (href === "#password") {
         showPasswordForm();
         return;
       }
 
-      // Handle info link
+      // Xử lý link thông tin
       if (href === "#info") {
         hidePasswordForm();
         return;
       }
 
-      // Remove active class from all links
+      // Xóa class active khỏi tất cả links
       menuLinks.forEach((l) => l.classList.remove("active"));
 
-      // Add active class to clicked link
+      // Thêm class active cho link được click
       this.classList.add("active");
 
-      // Scroll to target
+      // Cuộn đến mục tiêu
       const target = document.querySelector(href);
       if (target) {
         const offsetTop = target.offsetTop - 100;
@@ -51,7 +51,7 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // ============================================
-  // UPDATE PERSONAL INFO FORM
+  // CẬP NHẬT FORM THÔNG TIN CÁ NHÂN
   // ============================================
 
   const updateInfoForm = document.getElementById("updateInfoForm");
@@ -63,30 +63,30 @@ document.addEventListener("DOMContentLoaded", function () {
       const formData = new FormData(this);
       formData.append("action", "update_info");
 
-      // Validate fullname
+      // Kiểm tra họ tên
       const fullname = formData.get("fullname").trim();
       if (!fullname || fullname.length < 2) {
         showAlert("error", "Họ tên phải có ít nhất 2 ký tự");
         return;
       }
 
-      // Validate phone if provided
+      // Kiểm tra số điện thoại nếu có
       const phone = formData.get("phone").trim();
       if (phone && !/^[0-9]{10,11}$/.test(phone)) {
         showAlert("error", "Số điện thoại không hợp lệ (10-11 chữ số)");
         return;
       }
 
-      // Get submit button
+      // Lấy nút submit
       const submitBtn = this.querySelector('button[type="submit"]');
       const originalText = submitBtn.innerHTML;
 
-      // Disable button and show loading
+      // Vô hiệu hóa nút và hiển thị loading
       submitBtn.disabled = true;
       submitBtn.innerHTML =
         '<span class="spinner-border spinner-border-sm me-2"></span>Đang lưu...';
 
-      // Submit via AJAX
+      // Gửi qua AJAX
       fetch("/Web_TMDT/controller/controller_User/profile_controller.php", {
         method: "POST",
         body: formData,
@@ -390,7 +390,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // ============================================
-// AVATAR UPLOAD FUNCTION (outside DOMContentLoaded)
+// HÀM UPLOAD AVATAR (ngoài DOMContentLoaded)
 // ============================================
 
 function handleAvatarChange(input) {
@@ -433,7 +433,7 @@ function handleAvatarChange(input) {
   formData.append("action", "upload_avatar");
   formData.append("avatar", file);
 
-  // Add loading overlay (instead of replacing entire wrapper)
+  // Thêm lớp phủ loading (thay vì thay thế toàn bộ wrapper)
   const avatarWrapper = document.querySelector(".avatar-wrapper");
   const loadingOverlay = document.createElement("div");
   loadingOverlay.className = "loading-overlay";
@@ -524,22 +524,22 @@ function showNotification(message, type = "info") {
 }
 
 // ============================================
-// SHOW/HIDE PASSWORD FORM
+// HIỆN/ẨN FORM MẬT KHẨU
 // ============================================
 
 function showPasswordForm() {
-  // Hide info section
+  // Ẩn phần thông tin
   const infoSection = document.getElementById("info");
   if (infoSection) {
     infoSection.style.display = "none";
   }
 
-  // Show password section
+  // Hiện phần mật khẩu
   const passwordSection = document.getElementById("password");
   if (passwordSection) {
     passwordSection.style.display = "block";
 
-    // Smooth scroll to password section
+    // Cuộn mượt đến phần mật khẩu
     const offsetTop = passwordSection.offsetTop - 100;
     window.scrollTo({
       top: offsetTop,

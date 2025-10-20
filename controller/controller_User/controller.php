@@ -108,7 +108,8 @@ if (isset($_POST['login'])) {
         if ($login_result['role'] == 'admin') {
             $redirect_url = '../../view/Admin/admin_home.php';
         } else {
-            $redirect_url = '../../view/User/home.php';
+            // Clear cart khi login user mới (để đồng bộ giỏ hàng với user mới)
+            $redirect_url = '../../view/User/home.php?clear_cart=1';
         }
         
         // Đảm bảo session được ghi vào disk trước khi redirect
@@ -151,8 +152,8 @@ if (isset($_GET['action']) && $_GET['action'] == 'logout') {
     session_unset();
     session_destroy();
     
-    // Đăng xuất → Vẫn ở trang home, chỉ là chưa login
-    header('Location: ../../view/User/home.php');
+    // Chuyển hướng với flag để clear cart
+    header('Location: ../../view/User/home.php?clear_cart=1');
     exit();
 }
 

@@ -1,4 +1,8 @@
 <?php
+// Tắt hiển thị lỗi HTML để không làm hỏng JSON response
+ini_set('display_errors', 0);
+error_reporting(E_ALL);
+
 session_start();
 require_once '../../model/database.php';
 require_once '../../model/product_model.php';
@@ -92,23 +96,39 @@ function createOrder() {
         if (abs($db_price - $cart_price) > 1) {
             echo json_encode([
                 'success' => false, 
-                'message' => "Giá sản phẩm {$product['name']} đã thay đổi. Vui lòng làm mới giỏ hàng",
-                'debug' => [
-                    'db_price' => $db_price,
-                    'cart_price' => $cart_price,
-                    'difference' => abs($db_price - $cart_price)
-                ]
+                'message' => "Giá sản phẩm {$product['name']} đã thay đổi. Vui lòng làm mới giỏ hàng"
             ]);
             return;
         }
     }
     
+    // Tính tổng tiền từ cart (tính lại để đảm bảo chính xác)
+    $total_amount = 0;
+    foreach ($cart as $item) {
+        $total_amount += floatval($item['price']) * intval($item['quantity']);
+    }
+    
     // Xử lý voucher nếu có
     $voucher_id = null;
+    $discount_amount = 0;
+    $final_amount = $total_amount;
+    
     if (!empty($voucher_code)) {
         $voucher = getVoucherByCode($voucher_code);
         if ($voucher && $voucher['status'] === 'active') {
             $voucher_id = $voucher['voucher_id'];
+            
+            // Tính giảm giá
+            if ($voucher['type'] === 'percent') { // FIX: Đổi từ 'percentage' thành 'percent' để khớp với database
+                $discount_amount = $total_amount * (floatval($voucher['discount']) / 100);
+            } else { // fixed
+                $discount_amount = floatval($voucher['discount']);
+            }
+            
+            $final_amount = $total_amount - $discount_amount;
+            if ($final_amount < 0) {
+                $final_amount = 0;
+            }
         }
     }
     
@@ -116,10 +136,10 @@ function createOrder() {
     $conn->begin_transaction();
     
     try {
-        // 1. Tạo order
+        // 1. Tạo order (dùng final_amount sau khi áp dụng voucher)
         $stmt = $conn->prepare("INSERT INTO orders (user_id, total, status, voucher_id, shipping_address, note, order_date) 
                                 VALUES (?, ?, 'pending', ?, ?, ?, NOW())");
-        $stmt->bind_param('idiss', $user_id, $total, $voucher_id, $shipping_address, $note);
+        $stmt->bind_param('idiss', $user_id, $final_amount, $voucher_id, $shipping_address, $note);
         
         if (!$stmt->execute()) {
             throw new Exception('Không thể tạo đơn hàng');
@@ -161,13 +181,28 @@ function createOrder() {
         // Commit transaction
         $conn->commit();
         
-        // TODO: Gửi email xác nhận (sẽ tích hợp sau)
-        // sendOrderConfirmationEmail($email, $fullname, $order_id);
+        // Gửi email xác nhận đơn hàng (không làm crash nếu email lỗi)
+        $email_sent = false;
+        try {
+            require_once '../../model/email_model.php';
+            $order_details_html = generateOrderDetailsHTML($order_id, $cart, $total_amount, $discount_amount, $final_amount);
+            $email_sent = sendOrderConfirmationEmail($email, $fullname, $order_id, $order_details_html);
+        } catch (Exception $email_error) {
+            // Log lỗi nhưng không làm thất bại đơn hàng
+            error_log("Lỗi gửi email cho đơn hàng #$order_id: " . $email_error->getMessage());
+        }
         
         // Trả về kết quả thành công
+        $message = 'Đặt hàng thành công!';
+        if ($email_sent) {
+            $message .= ' Email xác nhận đã được gửi.';
+        } else {
+            $message .= ' Bạn có thể kiểm tra đơn hàng trong lịch sử đơn hàng.';
+        }
+        
         echo json_encode([
             'success' => true,
-            'message' => 'Đặt hàng thành công',
+            'message' => $message,
             'order_id' => $order_id
         ]);
         
@@ -195,5 +230,58 @@ function getVoucherByCode($code) {
     $voucher = $result->fetch_assoc();
     $stmt->close();
     return $voucher;
+}
+
+/**
+ * Tạo HTML hiển thị chi tiết đơn hàng cho email
+ */
+function generateOrderDetailsHTML($order_id, $cart, $total_amount, $discount_amount, $final_amount) {
+    $html = '<table style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif;">';
+    $html .= '<thead>';
+    $html .= '<tr style="background-color: #f8f9fa;">';
+    $html .= '<th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Sản phẩm</th>';
+    $html .= '<th style="padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6;">Size</th>';
+    $html .= '<th style="padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6;">Số lượng</th>';
+    $html .= '<th style="padding: 12px; text-align: right; border-bottom: 2px solid #dee2e6;">Đơn giá</th>';
+    $html .= '<th style="padding: 12px; text-align: right; border-bottom: 2px solid #dee2e6;">Thành tiền</th>';
+    $html .= '</tr>';
+    $html .= '</thead>';
+    $html .= '<tbody>';
+    
+    foreach ($cart as $item) {
+        $subtotal = $item['price'] * $item['quantity'];
+        $size = isset($item['size']) ? htmlspecialchars($item['size']) : 'N/A';
+        
+        $html .= '<tr>';
+        $html .= '<td style="padding: 12px; border-bottom: 1px solid #dee2e6;">' . htmlspecialchars($item['name']) . '</td>';
+        $html .= '<td style="padding: 12px; text-align: center; border-bottom: 1px solid #dee2e6;">' . $size . '</td>';
+        $html .= '<td style="padding: 12px; text-align: center; border-bottom: 1px solid #dee2e6;">' . $item['quantity'] . '</td>';
+        $html .= '<td style="padding: 12px; text-align: right; border-bottom: 1px solid #dee2e6;">' . number_format($item['price'], 0, ',', '.') . ' ₫</td>';
+        $html .= '<td style="padding: 12px; text-align: right; border-bottom: 1px solid #dee2e6;">' . number_format($subtotal, 0, ',', '.') . ' ₫</td>';
+        $html .= '</tr>';
+    }
+    
+    $html .= '</tbody>';
+    $html .= '<tfoot>';
+    $html .= '<tr>';
+    $html .= '<td colspan="4" style="padding: 12px; text-align: right; font-weight: bold;">Tạm tính:</td>';
+    $html .= '<td style="padding: 12px; text-align: right;">' . number_format($total_amount, 0, ',', '.') . ' ₫</td>';
+    $html .= '</tr>';
+    
+    if ($discount_amount > 0) {
+        $html .= '<tr>';
+        $html .= '<td colspan="4" style="padding: 12px; text-align: right; font-weight: bold; color: #28a745;">Giảm giá:</td>';
+        $html .= '<td style="padding: 12px; text-align: right; color: #28a745;">-' . number_format($discount_amount, 0, ',', '.') . ' ₫</td>';
+        $html .= '</tr>';
+    }
+    
+    $html .= '<tr style="background-color: #f8f9fa;">';
+    $html .= '<td colspan="4" style="padding: 12px; text-align: right; font-weight: bold; font-size: 16px;">Tổng cộng:</td>';
+    $html .= '<td style="padding: 12px; text-align: right; font-weight: bold; font-size: 16px; color: #dc3545;">' . number_format($final_amount, 0, ',', '.') . ' ₫</td>';
+    $html .= '</tr>';
+    $html .= '</tfoot>';
+    $html .= '</table>';
+    
+    return $html;
 }
 ?>

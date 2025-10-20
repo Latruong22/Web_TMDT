@@ -13,6 +13,9 @@ document.addEventListener("DOMContentLoaded", function () {
 // ========================================
 
 function initializeCart() {
+  // Check xem có cần clear cart không (khi đổi user)
+  checkAndClearCartIfNeeded();
+
   const cart = getCartFromStorage();
   console.log("🚀 Initializing cart with", cart.length, "items:", cart);
 
@@ -24,6 +27,49 @@ function initializeCart() {
   toggleCartSections(cart.length > 0);
 
   console.log("✅ Cart initialization completed!");
+}
+
+/**
+ * Kiểm tra và clear cart nếu user đã đổi
+ * Lưu current_user_id vào localStorage để track
+ */
+function checkAndClearCartIfNeeded() {
+  // Lấy user_id hiện tại từ PHP session (nếu có)
+  const currentUserId = getCurrentUserId();
+
+  // Lấy user_id đã lưu trong localStorage
+  const savedUserId = localStorage.getItem("cart_user_id");
+
+  // Nếu user_id khác nhau (đã đổi user) hoặc logout (currentUserId = null mà có savedUserId)
+  if (savedUserId !== null && savedUserId !== currentUserId) {
+    console.log(
+      `🔄 User changed from ${savedUserId} to ${currentUserId} - Clearing cart`
+    );
+
+    // Clear cart và voucher
+    localStorage.removeItem("cart");
+    localStorage.removeItem("appliedVoucher");
+
+    // Update cart count về 0
+    updateCartCount();
+  }
+
+  // Lưu user_id hiện tại vào localStorage
+  if (currentUserId) {
+    localStorage.setItem("cart_user_id", currentUserId);
+  } else {
+    // Nếu logout, xóa cart_user_id
+    localStorage.removeItem("cart_user_id");
+  }
+}
+
+/**
+ * Lấy user_id hiện tại từ PHP session
+ * Sử dụng meta tag trong HTML để truyền user_id từ PHP sang JS
+ */
+function getCurrentUserId() {
+  const userIdMeta = document.querySelector('meta[name="user-id"]');
+  return userIdMeta ? userIdMeta.getAttribute("content") : null;
 }
 
 function loadVoucherFromStorage() {

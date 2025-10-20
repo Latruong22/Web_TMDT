@@ -2,7 +2,7 @@
 $host = 'localhost';
 $user = 'root';
 $password = '';
-$dbname = 'snowboard_web'; // Thay bằng tên database của bạn
+$dbname = 'snowboard_web'; // Thay bằng tên database của bạ n
 
 // Tạo kết nối
 $conn = new mysqli($host, $user, $password, $dbname);
@@ -20,12 +20,12 @@ function getConfig($key) {
     $config = [
         'site_name' => 'Snowboard Web',
         'site_url' => 'http://localhost/Web_TMDT',
-        'admin_email' => 'admin@example.com',
-        'support_email' => 'support@example.com',
+        'admin_email' => 'latruong22061012@gmail.com',
+        'support_email' => 'latruong22061012@gmail.com',
         'mail_host' => 'smtp.gmail.com',
         'mail_port' => 587,
-        'mail_username' => 'your_email@gmail.com', // Thay bằng email của bạn
-        'mail_password' => 'your_password', // Thay bằng mật khẩu email
+        'mail_username' => 'latruong22061012@gmail.com',
+        'mail_password' => 'psxnkzjinbumxqol', // Gmail App Password
         'mail_encryption' => 'tls',
     ];
     

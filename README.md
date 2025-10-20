@@ -86,6 +86,15 @@ Website thương mại điện tử chuyên bán các sản phẩm snowboard, th
 - ✅ **Top sản phẩm** - Sản phẩm bán chạy nhất
 - ✅ **Top khách hàng** - Khách hàng mua nhiều nhất
 
+#### 8. Quản lý Email Marketing
+
+- ✅ **Gửi email hàng loạt** - Gửi thông báo/khuyến mãi đến tất cả users
+- ✅ **Gửi email cá nhân** - Gửi email đến user cụ thể
+- ✅ **Email templates** - Template General và Promotion có sẵn
+- ✅ **Preview email** - Xem trước email trước khi gửi
+- ✅ **Personalization** - Tự động thay thế {fullname}, {email}, {date}
+- ✅ **WYSIWYG Editor** - Định dạng nội dung email (Bold, Italic, Insert variables)
+
 **Chú thích:** ✅ Hoàn thành
 
 ## 🛠️ Công nghệ sử dụng
@@ -134,7 +143,8 @@ Web_TMDT/
 │   │   ├── admin_promotion_controller.php
 │   │   ├── admin_revenue_controller.php
 │   │   ├── admin_review_controller.php
-│   │   └── admin_user_controller.php
+│   │   ├── admin_user_controller.php
+│   │   └── admin_email_controller.php
 │   ├── controller_User/        # User controllers
 │   │   ├── cart_controller.php
 │   │   ├── checkout_controller.php
@@ -181,7 +191,8 @@ Web_TMDT/
 │       ├── admin_user.php      # Quản lý người dùng
 │       ├── admin_promotion.php # Quản lý voucher
 │       ├── admin_review.php    # Quản lý đánh giá
-│       └── admin_revenue.php   # Báo cáo doanh thu
+│       ├── admin_revenue.php   # Báo cáo doanh thu
+│       └── admin_email.php     # Gửi email marketing
 │
 ├── 📁 Css/                     # Custom CSS
 │   ├── User/                   # User styles
@@ -300,6 +311,7 @@ Password: user123
 | 🎟️ Voucher    | `/view/Admin/admin_promotion.php` | Mã giảm giá         |
 | ⭐ Đánh giá   | `/view/Admin/admin_review.php`    | Duyệt review        |
 | 💰 Doanh thu  | `/view/Admin/admin_revenue.php`   | Báo cáo & phân tích |
+| 📧 Gửi Email  | `/view/Admin/admin_email.php`     | Email marketing     |
 
 ## 📊 Database Schema
 
@@ -432,6 +444,7 @@ Dự án được xây dựng với các biện pháp bảo mật cơ bản:
 - ✅ Quản lý voucher
 - ✅ Quản lý đánh giá
 - ✅ Báo cáo doanh thu
+- ✅ Gửi email marketing
 
 ### 🎯 Tính năng nổi bật
 
@@ -440,6 +453,9 @@ Dự án được xây dựng với các biện pháp bảo mật cơ bản:
 3. **Order Cancel** - Hủy đơn hàng với lý do chi tiết
 4. **Revenue Analytics** - Báo cáo doanh thu đa chiều với biểu đồ
 5. **Voucher System** - Mã giảm giá linh hoạt (%, fixed amount)
+6. **Email Marketing** - Gửi email tự động, template có sẵn, personalization
+7. **Cart Sync** - Đồng bộ giỏ hàng theo user, auto-clear khi đổi tài khoản
+8. **Order Email** - Tự động gửi email xác nhận khi đặt hàng thành công
 
 ### 📊 Thống kê code
 
@@ -465,7 +481,54 @@ Các tính năng có thể phát triển thêm:
 - 📧 Email marketing automation
 - 🔍 Advanced search với Elasticsearch
 
-## 🐛 Troubleshooting
+## � Changelog & Bug Fixes
+
+### ✅ Version 1.1 (20/10/2025)
+
+**Tính năng mới:**
+
+- ✨ **Admin Email Management** - Hệ thống gửi email marketing hoàn chỉnh
+  - Gửi email hàng loạt hoặc cá nhân
+  - WYSIWYG editor với formatting
+  - Email templates (General, Promotion)
+  - Preview email trước khi gửi
+  - Personalization variables
+
+**Bug Fixes:**
+
+- 🐛 **Fix Voucher Percentage Bug** - Sửa lỗi voucher giảm 20% bị hiểu thành 20,000đ
+  - Thay đổi: `'percentage'` → `'percent'` trong checkout_controller.php
+  - Impact: Tính toán giảm giá chính xác cho cả percent và fixed vouchers
+- 🐛 **Fix Cart User Sync** - Sửa lỗi giỏ hàng không đồng bộ khi đổi user
+  - Thêm user_id tracking trong localStorage
+  - Auto-clear cart khi detect user khác đăng nhập
+  - Thêm meta tag user-id vào 5 pages chính
+- 🐛 **Fix Admin Email UI** - Sửa lỗi CSS và navigation
+  - Chuẩn hóa HTML structure của admin_email.php
+  - Thêm link "Gửi Email" vào tất cả 8 trang admin
+  - Sidebar responsive với toggle button
+
+**Improvements:**
+
+- 🔒 Remove debug information trong production code
+- ♻️ Code cleanup: Xóa test files không cần thiết
+- 📝 Documentation: Thêm 4 file MD chi tiết các fix
+
+### ✅ Version 1.0 (17/10/2025)
+
+**Initial Release:**
+
+- ✅ Hoàn thành toàn bộ chức năng User & Admin
+- ✅ Review System
+- ✅ Profile Management
+- ✅ Order Tracking & Cancel
+- ✅ Revenue Analytics
+- ✅ Voucher System
+- ✅ Email confirmation khi đặt hàng
+
+---
+
+## �🐛 Troubleshooting
 
 ### Lỗi thường gặp
 
@@ -554,8 +617,8 @@ Cảm ơn:
 ### ⭐ Nếu thấy dự án hữu ích, hãy cho 1 star nhé! ⭐
 
 **Ngày bắt đầu:** 01/10/2025  
-**Cập nhật lần cuối:** 17/10/2025  
-**Trạng thái:** ✅ Hoàn thành
+**Cập nhật lần cuối:** 20/10/2025  
+**Trạng thái:** ✅ Hoàn thành 100%
 
 Made with ❤️ by [Latruong22](https://github.com/Latruong22)
 

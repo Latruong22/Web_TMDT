@@ -146,6 +146,7 @@ $discount_amount = $product['price'] - $final_price;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="user-id" content="<?php echo isset($_SESSION['user_id']) ? $_SESSION['user_id'] : ''; ?>">
     
     <!-- SEO Meta Tags -->
     <title><?= htmlspecialchars($product['name']) ?> - Snowboard Shop</title>
