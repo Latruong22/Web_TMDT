@@ -36,11 +36,35 @@ switch ($action) {
             exit();
         }
 
+        // ✅ KHÓA TRẠNG THÁI: Không cho phép thay đổi nếu đã delivered hoặc cancelled
+        $currentStatus = $order['status'] ?? '';
+        if (($currentStatus === 'delivered' || $currentStatus === 'cancelled') && $status !== $currentStatus) {
+            header('Location: ' . $redirect . (str_contains($redirect, '?') ? '&' : '?') . 'msg=locked');
+            exit();
+        }
+
         $shipping_address = $shipping_address !== '' ? $shipping_address : ($order['shipping_address'] ?? '');
         $note = $note !== '' ? $note : ($order['note'] ?? '');
 
         if (updateOrderStatus($order_id, $status, $shipping_address, $note)) {
-            header('Location: ' . $redirect . (str_contains($redirect, '?') ? '&' : '?') . 'msg=updated');
+            // ✅ GỬI EMAIL KHI HỦY ĐƠN
+            if ($status === 'cancelled') {
+                require_once '../../model/email_model.php';
+                require_once '../../model/user_model.php';
+                
+                $user_id = $order['user_id'] ?? 0;
+                if ($user_id > 0) {
+                    $user = getUserById($user_id);
+                    if ($user) {
+                        $cancel_reason = $note; // Sử dụng note làm lý do hủy
+                        sendOrderCancelledEmail($user['email'], $user['fullname'], $order_id, $cancel_reason);
+                    }
+                }
+                
+                header('Location: ' . $redirect . (str_contains($redirect, '?') ? '&' : '?') . 'msg=cancelled_email_sent');
+            } else {
+                header('Location: ' . $redirect . (str_contains($redirect, '?') ? '&' : '?') . 'msg=updated');
+            }
         } else {
             header('Location: ' . $redirect . (str_contains($redirect, '?') ? '&' : '?') . 'msg=error');
         }

@@ -21,17 +21,42 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // Original functionality - Confirm order status update
+  // NEW: Initialize status lock for delivered/cancelled orders
+  initializeStatusLock();
+
+  // Original functionality - Confirm order status update (ENHANCED)
   document.querySelectorAll(".order-update-form").forEach((form) => {
     form.addEventListener("submit", (event) => {
-      const status = form.querySelector("select[name='status']").value;
-      const message =
-        status === "cancelled"
-          ? "Xác nhận hủy đơn hàng này?"
-          : status === "delivered"
-          ? "Đánh dấu đơn hàng đã giao?"
-          : "Cập nhật trạng thái đơn hàng?";
-      if (!confirm(message)) {
+      const statusSelect = form.querySelector("select[name='status']");
+      const status = statusSelect.value;
+      const currentStatus =
+        statusSelect.dataset.currentStatus ||
+        statusSelect.querySelector("option[selected]")?.value;
+
+      // Check if trying to change from locked status
+      if (
+        (currentStatus === "delivered" || currentStatus === "cancelled") &&
+        status !== currentStatus
+      ) {
+        event.preventDefault();
+        alert("⚠️ Không thể thay đổi trạng thái đơn hàng đã giao hoặc đã hủy!");
+        return;
+      }
+
+      let message = "Cập nhật trạng thái đơn hàng?";
+      let extraWarning = "";
+
+      if (status === "cancelled") {
+        message = "⚠️ Xác nhận HỦY đơn hàng này?";
+        extraWarning =
+          "\n\nLưu ý: Sau khi hủy, không thể thay đổi trạng thái nữa. Khách hàng sẽ nhận được email thông báo.";
+      } else if (status === "delivered") {
+        message = "✓ Xác nhận đơn hàng ĐÃ GIAO?";
+        extraWarning =
+          "\n\nLưu ý: Sau khi đánh dấu đã giao, không thể thay đổi trạng thái nữa.";
+      }
+
+      if (!confirm(message + extraWarning)) {
         event.preventDefault();
       }
     });
@@ -288,5 +313,135 @@ class OrderFilterManager {
     });
 
     this.submitForm();
+  }
+}
+
+// ============================================
+// STATUS LOCK FUNCTIONALITY
+// ============================================
+/**
+ * Khởi tạo khóa trạng thái cho đơn hàng đã giao hoặc đã hủy
+ * Khi trạng thái là 'delivered' hoặc 'cancelled', disable các option khác
+ */
+function initializeStatusLock() {
+  const allForms = document.querySelectorAll(".order-update-form");
+
+  allForms.forEach((form) => {
+    const statusSelect = form.querySelector('select[name="status"]');
+    if (!statusSelect) return;
+
+    // Lưu trạng thái hiện tại
+    const currentStatus = statusSelect.value;
+    statusSelect.dataset.currentStatus = currentStatus;
+
+    // Nếu trạng thái là delivered hoặc cancelled, khóa form
+    if (currentStatus === "delivered" || currentStatus === "cancelled") {
+      lockOrderStatus(form, statusSelect, currentStatus);
+    }
+
+    // Lắng nghe sự kiện thay đổi
+    statusSelect.addEventListener("change", function (e) {
+      const newStatus = this.value;
+      const oldStatus = this.dataset.currentStatus;
+
+      // Nếu đang thay đổi TỪ delivered/cancelled
+      if (
+        (oldStatus === "delivered" || oldStatus === "cancelled") &&
+        newStatus !== oldStatus
+      ) {
+        e.preventDefault();
+        alert("⚠️ Không thể thay đổi trạng thái đơn hàng đã giao hoặc đã hủy!");
+        this.value = oldStatus; // Reset về trạng thái cũ
+        return;
+      }
+
+      // Nếu đang thay đổi SANG delivered/cancelled, hiển thị cảnh báo
+      if (newStatus === "delivered" || newStatus === "cancelled") {
+        const warning =
+          newStatus === "delivered"
+            ? "⚠️ Lưu ý: Sau khi đánh dấu ĐÃ GIAO, bạn sẽ không thể thay đổi trạng thái nữa!"
+            : "⚠️ Lưu ý: Sau khi HỦY đơn, bạn sẽ không thể thay đổi trạng thái nữa!\n\nKhách hàng sẽ nhận được email thông báo đơn hàng đã bị hủy.";
+
+        // Hiển thị warning badge
+        showStatusWarning(form, warning);
+      } else {
+        // Xóa warning nếu chọn trạng thái khác
+        removeStatusWarning(form);
+      }
+    });
+  });
+}
+
+/**
+ * Khóa form cập nhật trạng thái
+ */
+function lockOrderStatus(form, statusSelect, lockedStatus) {
+  // Disable tất cả options khác
+  const allOptions = statusSelect.querySelectorAll("option");
+  allOptions.forEach((option) => {
+    if (option.value !== lockedStatus) {
+      option.disabled = true;
+    }
+  });
+
+  // Thêm tooltip/notice
+  const lockMessage =
+    lockedStatus === "delivered"
+      ? "🔒 Đơn hàng đã giao - không thể thay đổi trạng thái"
+      : "🔒 Đơn hàng đã hủy - không thể thay đổi trạng thái";
+
+  // Thêm badge thông báo
+  const existingBadge = form.querySelector(".status-lock-badge");
+  if (!existingBadge) {
+    const badge = document.createElement("div");
+    badge.className = "alert alert-info status-lock-badge mt-2 mb-2";
+    badge.style.cssText = "font-size: 0.875rem; padding: 0.5rem;";
+    badge.innerHTML = `<i class="fas fa-lock me-2"></i>${lockMessage}`;
+
+    statusSelect.parentElement.appendChild(badge);
+  }
+
+  // Disable submit button
+  const submitBtn = form.querySelector('button[type="submit"]');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.classList.add("disabled");
+    submitBtn.title = "Không thể thay đổi trạng thái đã khóa";
+  }
+
+  // Disable các trường khác
+  const textareas = form.querySelectorAll("textarea");
+  textareas.forEach((textarea) => {
+    textarea.disabled = true;
+    textarea.style.backgroundColor = "#f8f9fa";
+  });
+}
+
+/**
+ * Hiển thị warning khi chọn delivered/cancelled
+ */
+function showStatusWarning(form, message) {
+  // Xóa warning cũ nếu có
+  removeStatusWarning(form);
+
+  const badge = document.createElement("div");
+  badge.className = "alert alert-warning status-warning-badge mt-2 mb-2";
+  badge.style.cssText = "font-size: 0.875rem; padding: 0.5rem;";
+  badge.innerHTML = `<i class="fas fa-exclamation-triangle me-2"></i>${message.replace(
+    /\n/g,
+    "<br>"
+  )}`;
+
+  const statusSelect = form.querySelector('select[name="status"]');
+  statusSelect.parentElement.appendChild(badge);
+}
+
+/**
+ * Xóa warning badge
+ */
+function removeStatusWarning(form) {
+  const existingWarning = form.querySelector(".status-warning-badge");
+  if (existingWarning) {
+    existingWarning.remove();
   }
 }

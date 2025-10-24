@@ -210,6 +210,87 @@ function sendOrderConfirmationEmail($email, $fullname, $order_id, $order_details
     return sendEmail($email, $subject, $message);
 }
 
+/**
+ * Gửi email thông báo đơn hàng đã bị hủy
+ * 
+ * @param string $email Email người nhận
+ * @param string $fullname Tên người nhận
+ * @param int $order_id Mã đơn hàng
+ * @param string $cancel_reason Lý do hủy (tùy chọn)
+ * @return bool True nếu gửi thành công
+ */
+function sendOrderCancelledEmail($email, $fullname, $order_id, $cancel_reason = '') {
+    $subject = "Thông báo hủy đơn hàng #$order_id - " . getConfig('site_name');
+    
+    $reason_html = '';
+    if (!empty($cancel_reason)) {
+        $reason_html = "
+            <div style='background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0;'>
+                <p style='margin: 0; color: #856404;'><strong>Lý do hủy:</strong></p>
+                <p style='margin: 5px 0 0; color: #856404;'>" . nl2br(htmlspecialchars($cancel_reason)) . "</p>
+            </div>
+        ";
+    }
+    
+    $message = "
+    <!DOCTYPE html>
+    <html lang='vi'>
+    <head>
+        <meta charset='UTF-8'>
+        <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+        <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa; }
+            .header { background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0; }
+            .content { background-color: white; padding: 30px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+            .footer { text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px; }
+            .button { display: inline-block; padding: 12px 30px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+            .alert { background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        </style>
+    </head>
+    <body>
+        <div class='container'>
+            <div class='header'>
+                <h1 style='margin: 0; font-size: 28px;'>⚠️ Đơn Hàng Đã Bị Hủy</h1>
+            </div>
+            <div class='content'>
+                <p>Xin chào <strong>" . htmlspecialchars($fullname) . "</strong>,</p>
+                
+                <div class='alert'>
+                    <p style='margin: 0;'><strong>Đơn hàng #$order_id của bạn đã bị hủy.</strong></p>
+                </div>
+                
+                $reason_html
+                
+                <p>Chúng tôi rất tiếc vì sự bất tiện này. Nếu đơn hàng bị hủy do hết hàng hoặc lý do khác từ phía cửa hàng, chúng tôi xin lỗi vì điều này.</p>
+                
+                <p><strong>Các bước tiếp theo:</strong></p>
+                <ul>
+                    <li>Nếu bạn đã thanh toán, số tiền sẽ được hoàn lại trong 3-5 ngày làm việc</li>
+                    <li>Nếu bạn sử dụng voucher, voucher sẽ được hoàn lại vào tài khoản</li>
+                    <li>Bạn có thể đặt hàng lại bất cứ lúc nào trên website</li>
+                </ul>
+                
+                <p style='text-align: center;'>
+                    <a href='" . getConfig('site_url') . "/view/User/product_list.php' class='button'>Tiếp tục mua sắm</a>
+                </p>
+                
+                <p>Nếu bạn có bất kỳ câu hỏi nào về việc hủy đơn hàng này, vui lòng liên hệ với chúng tôi.</p>
+                
+                <p>Trân trọng,<br>" . getConfig('site_name') . " Team</p>
+            </div>
+            <div class='footer'>
+                <p>Email này được gửi tự động. Vui lòng không trả lời.</p>
+                <p>&copy; " . date('Y') . " " . getConfig('site_name') . ". Đã đăng ký bản quyền.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    ";
+    
+    return sendEmail($email, $subject, $message);
+}
+
 // ========================================
 // ADMIN EMAIL MANAGEMENT FUNCTIONS
 // ========================================

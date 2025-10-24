@@ -35,6 +35,8 @@ $message_map = [
     'invalid' => 'Dữ liệu gửi lên không hợp lệ.',
     'error' => 'Có lỗi xảy ra, vui lòng thử lại.',
     'notfound' => 'Không tìm thấy đơn hàng tương ứng.',
+    'locked' => '⚠️ Không thể thay đổi trạng thái đơn hàng đã giao hoặc đã hủy!',
+    'cancelled_email_sent' => '✓ Đã hủy đơn hàng và gửi email thông báo cho khách hàng.',
 ];
 $alert_text = $message_map[$msg] ?? '';
 ?>
